@@ -1,5 +1,11 @@
 # NAO 的使用方法及注意事项
 
+## NAO 的固件型号与序列号
+
+Naoqi version:  2.1.2
+
+BO S/N:         ALDR1312N090156
+
 ## 检测 NAO 的关节状况信息
 
 将 nao_ip 替换成 NAO 的互联网地址：
@@ -15,3 +21,11 @@
 ## 避免 NAO 关节过热
 
 如果长时间保持关节 stiffness 会导致关节过热，解决方法是不用 NAO 的时候使用 rest() 函数让他休息，此时关节 stiffness 为 0 ，电机不发热。
+
+## 联系 Aldebaran 的客户服务
+
+发送邮件到：
+
+> support@aldebaran-robotics.com
+
+或在网页入口提交 issue 。一般半小时之内得到回复，非常及时，推荐使用！（注意说清楚型号和序列号）
