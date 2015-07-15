@@ -1,7 +1,7 @@
 import cv2, numpy
 from posture import Motion
 
-IP = '127.0.0.1'
+IP = '101.5.217.2'
 PORT = 9559
 
 def str2array(string, shape):
@@ -22,11 +22,11 @@ motion = Motion(IP, PORT)
 # init window
 windowName = "Chessboard"
 cv2.namedWindow(windowName, 1)
-delay = 1000 / fps
+delay = 1000 / motion.fps
 
 # capture images
 while cv2.waitKey(delay) < 0:
-	imgstr, shape = takePicture()
+	imgstr, shape = motion.takePicture()
 	image = str2array(imgstr, shape)
 	cv2.imshow(windowName, image)
 

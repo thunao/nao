@@ -4,7 +4,7 @@ __author__  = 'cty'
 __version__ = '0.1'
 __contact__ = 'chentianyu@outlook.com'
 
-import sys, time, Image
+import sys, time
 from naoqi import ALProxy
 import vision_definitions
 
@@ -15,11 +15,10 @@ class Motion:
 		self.motionProxy = ALProxy('ALMotion', ip, port)
 		self.postureProxy = ALProxy('ALRobotPosture', ip, port)
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
-		resolution = vision_definitions.k4VGA
+		resolution = vision_definitions.kQQVGA
 		colorSpace = vision_definitions.kRGBColorSpace
-		fps = 15
-		self.videoClient = camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, fps)
-		self.imageCnt = 0
+		self.fps = 15
+		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
 
 		# wake up nao
 		self.motionProxy.wakeUp()
