@@ -15,11 +15,11 @@ class Motion:
 		self.motionProxy = ALProxy('ALMotion', ip, port)
 		self.postureProxy = ALProxy('ALRobotPosture', ip, port)
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
-		resolution = vision_definitions.kQQVGA
+		resolution = vision_definitions.kQVGA
 		colorSpace = vision_definitions.kRGBColorSpace
 		self.fps = 15
 		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
-
+		print self.videoClient
 		# wake up nao
 		self.motionProxy.wakeUp()
 		# stand init
@@ -51,7 +51,7 @@ class Motion:
 	# take a picture
 	def takePicture(self):
 		# for debug
-		print 'taking picture. '
+		print "takePicture"
 
 		naoImage = self.camProxy.getImageRemote(self.videoClient)
 

@@ -31,3 +31,4 @@ while cv2.waitKey(delay) < 0:
 	cv2.imshow(windowName, image)
 
 cv2.destroyAllWindows()
+del motion
