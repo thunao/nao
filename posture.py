@@ -17,15 +17,15 @@ class Motion:
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
 		resolution = vision_definitions.kQVGA
 		colorSpace = vision_definitions.kRGBColorSpace
-		self.fps = 15
-		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
-		print self.videoClient
+		fps = 15
+		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, fps)
+		# print self.videoClient
+		# in case of camera subscribe overflow
+		assert not self.videoClient == None
 		# wake up nao
 		self.motionProxy.wakeUp()
 		# stand init
 		self.postureProxy.goToPosture("StandInit", 0.5)
-		# init motion proxy
-		self.motionProxy.moveInit()
 
 	# destructor
 	def __del__(self):
@@ -66,5 +66,11 @@ class Motion:
 		print 'turning radius %f. ' %(direction, rad)
 		self.motionProxy.walkTo(0.0, 0.0, rad)
 
+	# robot walk
 	def walk(self):
-		pass
+		# init motion proxy
+		self.motionProxy.moveInit()
+
+		self.motionProxy.setWalkTargetVelocity(1.0, 0.0, 0.0, 1.0)
+		time.sleep(3.0)
+		motionProxy.stopMove()
