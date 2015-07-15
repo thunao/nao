@@ -29,10 +29,10 @@ class Motion:
 
 	# destructor
 	def __del__(self):
-		camProxy.unsubscribe(videoClient)
-		camProxy.setAllParametersToDefault(0)
+		self.camProxy.unsubscribe(self.videoClient)
+		self.camProxy.setAllParametersToDefault(0)
 		# rest, set all stiffness to 0
-		motionProxy.rest()
+		self.motionProxy.rest()
 
 
 	# move head toward a direction
