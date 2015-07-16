@@ -1,7 +1,7 @@
 import cv2, numpy
 from posture import Motion
 
-IP = '101.5.217.2'
+IP = '101.5.221.178'
 PORT = 9559
 
 def str2array(string, shape):

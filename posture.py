@@ -17,8 +17,8 @@ class Motion:
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
 		resolution = vision_definitions.kQVGA
 		colorSpace = vision_definitions.kRGBColorSpace
-		fps = 15
-		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, fps)
+		self.fps = 15
+		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
 		# print self.videoClient
 		# in case of camera subscribe overflow
 		assert not self.videoClient == None
