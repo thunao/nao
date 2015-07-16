@@ -1,9 +1,6 @@
 import cv2, numpy
 from posture import Motion
 
-IP = '101.5.217.2'
-PORT = 9559
-
 def str2array(string, shape):
 	assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
 	image = numpy.zeros(shape, numpy.uint8)
@@ -16,19 +13,26 @@ def str2array(string, shape):
 				image[i, j, c] = ord(string[p1 + p2 + p3])
 	return image
 
-# init a Motion instance
-motion = Motion(IP, PORT)
+def main(IP='127.0.0.1', PORT=9559):
 
-# init window
-windowName = "Chessboard"
-cv2.namedWindow(windowName, 1)
-delay = 1000 / motion.fps
+	# init a Motion instance
+	motion = Motion(IP, PORT)
 
-# capture images
-while cv2.waitKey(delay) < 0:
-	imgstr, shape = motion.takePicture()
-	image = str2array(imgstr, shape)
-	cv2.imshow(windowName, image)
+	# init window
+	windowName = "Chessboard"
+	cv2.namedWindow(windowName, 1)
+	delay = 1000 / motion.fps
 
-cv2.destroyAllWindows()
-del motion
+	# capture images
+	while cv2.waitKey(delay) < 0:
+		imgstr, shape = motion.takePicture()
+		image = str2array(imgstr, shape)
+		cv2.imshow(windowName, image)
+
+	cv2.destroyAllWindows()
+	del motion
+
+if __name__ == '__main__':
+	IP = '101.5.221.178'
+	PORT = 9559
+	main(IP, PORT)
