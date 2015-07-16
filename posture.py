@@ -64,13 +64,19 @@ class Motion:
 	def turn(self, rad):
 		# for debug
 		print 'turning radius %f. ' %(direction, rad)
-		self.motionProxy.walkTo(0.0, 0.0, rad)
+		self.motionProxy.moveInit()
+		self.motionProxy.moveTo(0.0, 0.0, rad)
 
-	# robot walk
-	def walk(self):
+	# robot walk, for a period of time
+	def walk(self, t):
+		# for debug
+		print 'walk. '
+
 		# init motion proxy
 		self.motionProxy.moveInit()
 
-		self.motionProxy.setWalkTargetVelocity(1.0, 0.0, 0.0, 1.0)
-		time.sleep(3.0)
-		motionProxy.stopMove()
+		print 'position: ', self.motionProxy.getRobotPosition(False)
+		self.motionProxy.moveToward(1.0, 0.0, 0.0)
+		time.sleep(t)
+		self.motionProxy.stopMove()
+		print 'position after move: ', self.motionProxy.getRobotPosition(False)
