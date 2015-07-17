@@ -92,9 +92,9 @@ def main():
 	board_pts[:,:2] = np.indices(board_sz).T.reshape(-1, 2)
 	board_pts *= square_sz
 
-	image1, image2, image1_pts, image2_pts, object_pts, imgSize = getMatchedPtsByChessboard(
-		[1], board_sz, board_pts)
-	#image1, image2, image1_pts, image2_pts, object_pts, imgSize = getMatchedPts()
+	'''image1, image2, image1_pts, image2_pts, object_pts, imgSize = getMatchedPtsByChessboard(
+		[1], board_sz, board_pts)'''
+	image1, image2, image1_pts, image2_pts, object_pts, imgSize = getMatchedPts()
 	# print image1_pts, image2_pts, object_pts, imgSize
 
 	cameraMatrix1 = np.identity(3, np.float32); cameraMatrix2 = np.identity(3, np.float32)
