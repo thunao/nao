@@ -1,0 +1,7 @@
+import numpy
+camera_x = 1
+camera_y = 1
+camera_z = 1
+headJointHeight = 1
+camera = numpy.mat([[camera_x], [camera_y], [camera_z]])
+headJoint = numpy.mat([[0], [0], [headJointHeight]])
