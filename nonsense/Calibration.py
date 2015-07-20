@@ -5,12 +5,10 @@ board_w = 5 # number of board corners per row
 board_h = 5 # number of board corners per column
 square_sz = float(10)	# side length of a single board square
 img_filelist = ['2.jpg', '3.jpg', '5.jpg']
-cameraMatrixFilename = 'CameraMatrix.npy'
-distCoeffsFilename = 'Distortion.npy'
 
-def calibrateCamera():
+def calibrateCamera(board_sz, square_sz, img_filelist):
+	board_w, board_h = board_sz
 	board_n = board_w * board_h
-	board_sz = (board_w, board_h)
 	cv2.namedWindow('Calibration', cv2.WINDOW_AUTOSIZE)
 	#ALLOCATE STORAGE
 	image_pts = []
@@ -76,5 +74,11 @@ def calibrateCamera():
 	cv2.destroyAllWindows()
 	return intrinsic_mat
 
+def saveCameraMatrix():
+	cameraMatrix = calibrateCamera((board_w, board_h), square_sz, img_filelist)
+	f = open('___.py', 'w')
+	f.write('matM = ' + str(cameraMatrix.tolist()))
+	f.close()
+
 if __name__ == '__main__':
-	print calibrateCamera()
+	saveCameraMatrix()
