@@ -1,12 +1,14 @@
 import cv2
 import numpy as np
 
-n_boards = 6
-board_w = 5
-board_h = 5
-square_sz = float(1.0)
+board_w = 5 # number of board corners per row
+board_h = 5 # number of board corners per column
+square_sz = float(10)	# side length of a single board square
+img_filelist = ['2.jpg', '3.jpg', '5.jpg']
+cameraMatrixFilename = 'CameraMatrix.npy'
+distCoeffsFilename = 'Distortion.npy'
 
-def main():
+def calibrateCamera():
 	board_n = board_w * board_h
 	board_sz = (board_w, board_h)
 	cv2.namedWindow('Calibration', cv2.WINDOW_AUTOSIZE)
@@ -22,15 +24,15 @@ def main():
 
 	img_h, img_w = 0, 0
 	#GET CORNERS
-	for i in [1, 4]:
-		image = cv2.imread(str(i) + '.jpg', cv2.IMREAD_COLOR)
+	for img in img_filelist:
+		image = cv2.imread(img, cv2.IMREAD_COLOR)
 		img_h, img_w = image.shape[:2]
 		#Find chessboard corners
 		found, corners = cv2.findChessboardCorners(
 			image, board_sz, None,
 			cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_FILTER_QUADS)
 		if corners is None:
-			print i
+			print img, 'Bad input'
 			continue
 
 		#Get subpixel accuracy on those corners
@@ -47,10 +49,13 @@ def main():
 		if found:
 			image_pts.append(corners.reshape(-1, 2))
 			object_pts.append(board_pts)
-			print i, 'ok'
+			print img, 'Good image'
 
 	# print image_pts
 	# print object_pts
+	if len(image_pts) == 0:
+		print 'no valid input image'
+		return None
 
 	#Initialize the two focal lengths in the intrinsic matrix
 	intrinsic_mat[0][0] = intrinsic_mat[1][1] = 1.0
@@ -64,10 +69,12 @@ def main():
 	print 'Distortion coeffs\n', distortion_coeffs
 	print 'Rotation vector\n', rvecs
 	print 'Translation vector\n', tvecs
-	np.save("Intrinsics.npy", intrinsic_mat)
-	np.save("Distortion.npy", distortion_coeffs)
+	#Save the results
+	np.save('CameraMatrix.npy', intrinsic_mat)
+	np.save('DistCoeffs.npy', distortion_coeffs)
 
 	cv2.destroyAllWindows()
+	return intrinsic_mat
 
 if __name__ == '__main__':
-	main()
+	print calibrateCamera()
