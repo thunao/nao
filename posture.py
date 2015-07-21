@@ -57,8 +57,9 @@ class Motion:
 		ret[HeadLoc(left = yaw, down = pitch)] = img
 
 		# 随便转转头
-		self.motionProxy.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
-		self.motionProxy.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
+		self.motionProxy.setAngles('HeadPitch', random.uniform(-0.1, 0.1), 0.1)
+		self.motionProxy.setAngles('HeadYaw', random.uniform(-0.1, 0.1), 0.1)
+		time.sleep(2.0)
 
 		pitch = self.motionProxy.getAngles('HeadPitch', False)
 		yaw = self.motionProxy.getAngles('HeadYaw', False)

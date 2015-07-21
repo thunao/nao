@@ -14,6 +14,13 @@ def test(IP='127.0.0.1', PORT=9559):
 		cv2.imwrite('img' + str(cnt) + '.jpg', imgs[key])
 		cnt += 1
 
+	motion.turn(0.2)
+	imgs = motion.lookAround()
+	for key in imgs:
+		print 'left: ', key.left, '; down: ', key.down
+		cv2.imwrite('img' + str(cnt) + '.jpg', imgs[key])
+		cnt += 1
+
 	del motion
 
 if __name__ == '__main__':
