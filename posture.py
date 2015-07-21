@@ -59,7 +59,7 @@ class Motion:
 			pitch = self.motionProxy.getAngles('HeadPitch', False)
 			yaw = self.motionProxy.getAngles('HeadYaw', False)
 			print 'taking picture'
-			img = __takePicture()
+			img = self.__takePicture()
 			ret[HeadLoc(left = yaw, down = pitch)] = img
 
 		self.motionProxy.setAngles('HeadPitch', 0.0, 0.1)
@@ -77,7 +77,7 @@ class Motion:
 		width = naoImage[0]; height = naoImage[1]
 		nchanels = naoImage[2]; array = naoImage[6]
 
-		return __str2array(array, (height, width, nchanels))
+		return self.__str2array(array, (height, width, nchanels))
 
 	def __str2array(string, shape):
 		assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
