@@ -59,7 +59,7 @@ class Motion:
 			pitch = self.motionProxy.getAngles('HeadPitch', False)
 			yaw = self.motionProxy.getAngles('HeadYaw', False)
 			print 'taking picture'
-			img = __takePicture()
+			img = self.__takePicture()
 			ret[HeadLoc(left = yaw, down = pitch)] = img
 
 		self.motionProxy.setAngles('HeadPitch', 0.0, 0.1)
