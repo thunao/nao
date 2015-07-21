@@ -8,6 +8,11 @@ import sys, time, random
 from naoqi import ALProxy
 import vision_definitions
 
+class HeadLoc:
+    def __init__(self, left = 0, down = 0):
+        self.left = left
+        self.down = down
+
 class Motion:
 
 	# constructor
@@ -46,11 +51,14 @@ class Motion:
 		ret = dict()
 
 		for n in range(n_imgs):
-			self.motionProxy.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
-			self.motionProxy.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
+			id = self.motionProxy.post.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
+			motionProxy.wait(id, 0)
+			id = self.motionProxy.post.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
+			motionProxy.wait(id, 0)
 
 			pitch = self.motionProxy.getAngles('HeadPitch', False)
 			yaw = self.motionProxy.getAngles('HeadYaw', False)
+			print 'taking picture'
 			img = __takePicture()
 			ret[HeadLoc(left = yaw, down = pitch)] = img
 
