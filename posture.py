@@ -26,6 +26,11 @@ class Motion:
 		self.motionProxy.wakeUp()
 		# stand init
 		self.postureProxy.goToPosture("StandInit", 0.5)
+		# move init
+		self.motionProxy.moveInit()
+
+		# get the origin
+		self.__origin = tuple(self.motionProxy.getRobotPosition(False))
 
 	# destructor
 	def __del__(self):
@@ -61,22 +66,21 @@ class Motion:
 		return array, (height, width, nchanels)
 
 	# turn left or turn right
+	# 说白了就是原地转圈
 	def turn(self, rad):
 		# for debug
 		print 'turning radius %f. ' %(direction, rad)
-		self.motionProxy.moveInit()
+
 		self.motionProxy.moveTo(0.0, 0.0, rad)
 
 	# robot walk, for a period of time
-	def walk(self, t):
+ 	# XXX TO DO
+	def walkStraight(self, ):
 		# for debug
 		print 'walk. '
 
-		# init motion proxy
-		self.motionProxy.moveInit()
-
 		print 'position: ', self.motionProxy.getRobotPosition(False)
-		self.motionProxy.moveToward(1.0, 0.0, 0.0)
-		time.sleep(t)
-		self.motionProxy.stopMove()
+		# self.motionProxy.moveToward(1.0, 0.0, 0.0)
+		# time.sleep(t)
+		# self.motionProxy.stopMove()
 		print 'position after move: ', self.motionProxy.getRobotPosition(False)
