@@ -7,7 +7,7 @@ def test(IP='127.0.0.1', PORT=9559):
 	motion = Motion(IP, PORT)
 
 	# test code
-	imgs = motion.lookAround(3)
+	imgs = motion.lookAround()
 	cnt = 0
 	for key in imgs:
 		print 'left: ', key.left, '; down: ', key.down
