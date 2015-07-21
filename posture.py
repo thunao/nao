@@ -4,7 +4,7 @@ __author__  = 'cty'
 __version__ = '0.1'
 __contact__ = 'chentianyu@outlook.com'
 
-import sys, time, random
+import sys, time, random, numpy
 from naoqi import ALProxy
 import vision_definitions
 
@@ -45,22 +45,26 @@ class Motion:
 		self.motionProxy.rest()
 
 	# 瞎 jb 看
-	def lookAround(self, n_imgs):
+	def lookAround(self):
 		print 'wow i\'m looking around... '
 
 		ret = dict()
 
-		for n in range(n_imgs):
-			id = self.motionProxy.post.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
-			self.motionProxy.wait(id, 0)
-			id = self.motionProxy.post.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
-			self.motionProxy.wait(id, 0)
+		pitch = self.motionProxy.getAngles('HeadPitch', False)
+		yaw = self.motionProxy.getAngles('HeadYaw', False)
+		print 'taking picture'
+		img = self.__takePicture()
+		ret[HeadLoc(left = yaw, down = pitch)] = img
 
-			pitch = self.motionProxy.getAngles('HeadPitch', False)
-			yaw = self.motionProxy.getAngles('HeadYaw', False)
-			print 'taking picture'
-			img = self.__takePicture()
-			ret[HeadLoc(left = yaw, down = pitch)] = img
+		# 随便转转头
+		self.motionProxy.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
+		self.motionProxy.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
+
+		pitch = self.motionProxy.getAngles('HeadPitch', False)
+		yaw = self.motionProxy.getAngles('HeadYaw', False)
+		print 'taking picture'
+		img = self.__takePicture()
+		ret[HeadLoc(left = yaw, down = pitch)] = img
 
 		self.motionProxy.setAngles('HeadPitch', 0.0, 0.1)
 		self.motionProxy.setAngles('HeadYaw', 0.0, 0.1)
@@ -79,7 +83,7 @@ class Motion:
 
 		return self.__str2array(array, (height, width, nchanels))
 
-	def __str2array(string, shape):
+	def __str2array(self, string, shape):
 		assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
 		image = numpy.zeros(shape, numpy.uint8)
 		for i in range(0, shape[0]):
@@ -101,7 +105,7 @@ class Motion:
 
 	# robot walk, for a period of time
  	# XXX TO DO
-	def walkStraight(self, ):
+	def walkStraight(self):
 		# for debug
 		print 'walk. '
 
