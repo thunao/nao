@@ -4,7 +4,7 @@ __author__  = 'cty'
 __version__ = '0.1'
 __contact__ = 'chentianyu@outlook.com'
 
-import sys, time
+import sys, time, random
 from naoqi import ALProxy
 import vision_definitions
 
@@ -39,22 +39,28 @@ class Motion:
 		# rest, set all stiffness to 0
 		self.motionProxy.rest()
 
+	# 瞎 jb 看
+	def lookAround(self, n_imgs):
+		print 'wow i\'m looking around... '
 
-	# move head toward a direction
-	def swingHead(self, direction, rad):
-		# for debug
-		print 'head moves %s to angle: %f. ' %(direction, rad)
+		ret = dict()
 
-		if direction == 'vertical':
-			self.motionProxy.setAngles('HeadPitch', rad, 0.1)
-			# for debug, the angle should be the same
-			print 'head vertical angle is: %f. ' %(self.motionProxy.getAngles('HeadPitch', False))
-		elif direction == 'horizontal':
-			self.motionProxy.setAngles('HeadYaw', rad, 0.1)
-			print 'head horizontal angle is: %f. ' %(self.motionProxy.getAngles('HeadYaw', False))
+		for n in range(n_imgs):
+			self.motionProxy.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
+			self.motionProxy.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
+
+			pitch = self.motionProxy.getAngles('HeadPitch', False)
+			yaw = self.motionProxy.getAngles('HeadYaw', False)
+			img = __takePicture()
+			ret[HeadLoc(left = yaw, down = pitch)] = img
+
+		self.motionProxy.setAngles('HeadPitch', 0.0, 0.1)
+		self.motionProxy.setAngles('HeadYaw', 0.0, 0.1)
+
+		return ret
 
 	# take a picture
-	def takePicture(self):
+	def __takePicture(self):
 		# for debug
 		print "takePicture"
 
@@ -63,10 +69,22 @@ class Motion:
 		width = naoImage[0]; height = naoImage[1]
 		nchanels = naoImage[2]; array = naoImage[6]
 
-		return array, (height, width, nchanels)
+		return __str2array(array, (height, width, nchanels))
+
+	def __str2array(string, shape):
+		assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
+		image = numpy.zeros(shape, numpy.uint8)
+		for i in range(0, shape[0]):
+			p1 = i * shape[1] * shape[2]
+			for j in range(0, shape[1]):
+				p2 = j * shape[2]
+				for c in range(0, shape[2]):
+					p3 = shape[2] - c - 1
+					image[i, j, c] = ord(string[p1 + p2 + p3])
+		return image
 
 	# turn left or turn right
-	# 说白了就是原地转圈
+	# 原地转圈
 	def turn(self, rad):
 		# for debug
 		print 'turning radius %f. ' %(direction, rad)
