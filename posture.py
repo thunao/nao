@@ -52,9 +52,9 @@ class Motion:
 
 		for n in range(n_imgs):
 			id = self.motionProxy.post.setAngles('HeadPitch', random.uniform(0.5, 0.5), 0.1)
-			motionProxy.wait(id, 0)
+			self.motionProxy.wait(id, 0)
 			id = self.motionProxy.post.setAngles('HeadYaw', random.uniform(0.5, 0.5), 0.1)
-			motionProxy.wait(id, 0)
+			self.motionProxy.wait(id, 0)
 
 			pitch = self.motionProxy.getAngles('HeadPitch', False)
 			yaw = self.motionProxy.getAngles('HeadYaw', False)

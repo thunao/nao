@@ -1,16 +1,22 @@
-import cv2, numpy
+import cv2, numpy, sys
 from posture import Motion
 
-def main(IP='127.0.0.1', PORT=9559):
+def test(IP='127.0.0.1', PORT=9559):
 
 	# init a Motion instance
 	motion = Motion(IP, PORT)
 
-	# your code
+	# test code
+	imgs = motion.lookAround(3)
+	cnt = 0
+	for key in imgs:
+		print 'left: ', key.left, '; down: ', key.down
+		cv2.imwrite('img' + str(cnt) + '.jpg', imgs[key])
+		cnt += 1
 
 	del motion
 
 if __name__ == '__main__':
-	IP = '101.5.221.178'
+	IP = sys.argv[1]
 	PORT = 9559
-	main(IP, PORT)
+	test(IP, PORT)
