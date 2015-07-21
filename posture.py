@@ -100,7 +100,7 @@ class Motion:
 	# 原地转圈
 	def turn(self, rad):
 		# for debug
-		print 'turning radius %f. ' %(direction, rad)
+		print 'turning radius %f. ' %(rad)
 
 		self.motionProxy.moveTo(0.0, 0.0, rad)
 
