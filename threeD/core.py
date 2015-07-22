@@ -80,12 +80,8 @@ def lineCross(lst):
 
 sift = cv2.SIFT()
 
-def matchPoint(img1, img2, dist):
+def matchPoint(kp1, des1, kp2, des2, dist, idx1, idx2):
     ret = []
-    def toVec3(pt):
-        return mat(pt[0], pt[1], 1)
-    kp1, des1 = sift.detectAndCompute(img1,None)
-    kp2, des2 = sift.detectAndCompute(img2,None)
 
     # BFMatcher with default params
     bf = cv2.BFMatcher()
@@ -94,10 +90,82 @@ def matchPoint(img1, img2, dist):
     # Apply ratio test
     for m,n in matches:
         if m.distance < sift_threshole * n.distance:
-            ret.append([toVec3(kp1[m.queryIdx].pt), 
-                toVec3(kp2[m.trainIdx].pt), 
-                ])
+            ret.append((m.queryIdx, m.trainIdx))
 
     # check threeD filter
-    return [item for item in ret
-        if dist.dist(item[0], item[1]) < threeD_threshole]
+    result = []
+    for id1, id2 in ret:
+        d = dist.dist(kp1[id1], kp2[id2])
+        if d < threeD_threshole:
+            result.append((d, idx1, id1, idx2, id2))
+    return result
+
+def get3DPoint(heads, imgs):
+    def toVec3(pt):
+        return mat(pt[0], pt[1], 1)
+    kps = []
+    dess = []
+    for img in imgs:
+        kp, des = sift.detectAndCompute(img, None)
+        kps.append([toVec3(item.pt) for item in kp])
+        dess.append(des)
+    tbl = []
+    for i in range(len(img)):
+        for j in range(i + 1, len(img)):
+            tbl += matchPoint(kps[i], dess[i], kps[j], dess[j],
+                    Distance(heads[i], heads[j]), i, j)
+
+    tbl.sort()
+
+    idxs = {}
+    ids = {}
+    for d, idx1, id1, idx2, id2 in tbl:
+        in1 = (idx1, id1) in idxs
+        in2 = (idx2, id2) in idxs
+        if not in1 and not in2:
+            idxs[(idx1, id1)] = idxs[(idx2, id2)] = [idx1, idx2]
+            ids[(idx1, id1)] = ids[(idx2, id2)] = [id1, id2]
+        elif not in1 and in2:
+            idxs[(idx1, id1)] = idxs[(idx2, id2)]
+            ids[(idx1, id1)] = ids[(idx2, id2)]
+            idxs[(idx2, id2)].append(idx1)
+            ids[(idx2, id2)].append(id1)
+        elif in1 and not in2:
+            idxs[(idx2, id2)] = idxs[(idx1, id1)]
+            ids[(idx2, id2)] = ids[(idx1, id1)]
+            idxs[(idx1, id1)].append(idx2)
+            ids[(idx1, id1)].append(id2)
+        else:
+            idxs1 = idxs[(idx1, id1)]
+            ids1 = ids[(idx1, id1)]
+            idxs2 = idxs[(idx2, id2)]
+            ids2 = ids[(idx2, id2)]
+            flag = True
+            for i in idxs1:
+                for j in idxs2:
+                    flag &= i != j
+            if flag:
+                for i in idxs2:
+                    idxs1.append(i)
+                for i in ids2:
+                    ids1.append(i)
+                for i in zip(idxs2, ids2):
+                    idxs[i] = idxs1
+                    ids[i] = ids1
+
+    s = []
+    st = set()
+    for idxc, idc in zip(idxs.values(), ids.values()):
+        ic = zip(idxc, idc)
+        if ic[0] not in st:
+            st.add(ic[0])
+            s.append(ic)
+
+    linegens = [LineGen(loc) for loc in heads]
+
+    pt  = [lineCross(
+            [linegens[idx1].gen(kp[idx1][id1]) for idx1, id1 in ic])
+            for ic in s]
+
+    print pt
+    return pt
