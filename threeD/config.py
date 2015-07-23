@@ -3,7 +3,7 @@ from Calibration.result import matM_raw
 
 #raw config
 camera_x = 58.71
-camera_y = 0
+camera_y = 461.
 camera_z = 63.64
 headJointHeight = 1
 sift_threshole = 0.75
