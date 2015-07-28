@@ -1,5 +1,6 @@
 from posture import Motion
 from math import pi
+import sys
 
 def test(IP='127.0.0.1', PORT=9559):
 	# init a Motion instance
