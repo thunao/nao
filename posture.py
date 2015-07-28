@@ -20,7 +20,7 @@ class Motion:
 		self.motionProxy = ALProxy('ALMotion', ip, port)
 		self.postureProxy = ALProxy('ALRobotPosture', ip, port)
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
-		resolution = vision_definitions.kQVGA
+		resolution = vision_definitions.kVGA
 		colorSpace = vision_definitions.kRGBColorSpace
 		self.fps = 15
 		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
