@@ -7,7 +7,7 @@ def test(IP='127.0.0.1', PORT=9559):
 	motion = Motion(IP, PORT)
 
 	motion.walkStraight((5, 0))
-    motion.turn(pi / 2)
+	motion.turn(pi / 2)
     motion.walkStraight((5, 8))
     motion.turn(- pi / 2)
     motion.walkStraight((10, 8))
