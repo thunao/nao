@@ -20,7 +20,7 @@ class Motion:
 		self.motionProxy = ALProxy('ALMotion', ip, port)
 		self.postureProxy = ALProxy('ALRobotPosture', ip, port)
 		self.camProxy = ALProxy('ALVideoDevice', ip, port)
-		resolution = vision_definitions.kQVGA
+		resolution = vision_definitions.kVGA
 		colorSpace = vision_definitions.kRGBColorSpace
 		self.fps = 15
 		self.videoClient = self.camProxy.subscribeCamera('python_client', 0, resolution, colorSpace, self.fps)
@@ -36,6 +36,8 @@ class Motion:
 
 		# get the origin
 		self.__origin = tuple(self.motionProxy.getRobotPosition(False))
+        self.__origin_grid = (0, 0, 0)
+        self.__position_grid = list(self.__origin_grid)
 
 	# destructor
 	def __del__(self):
@@ -103,15 +105,13 @@ class Motion:
 		print 'turning radius %f. ' %(rad)
 
 		self.motionProxy.moveTo(0.0, 0.0, rad)
+        self.__position_grid[2] = self.__position_grid[2] + rad
 
-	# robot walk, for a period of time
- 	# XXX TO DO
-	def walkStraight(self):
+	# robot moves to a certain grid
+	def walkStraight(self, new_position):
 		# for debug
 		print 'walk. '
 
-		print 'position: ', self.motionProxy.getRobotPosition(False)
-		# self.motionProxy.moveToward(1.0, 0.0, 0.0)
-		# time.sleep(t)
-		# self.motionProxy.stopMove()
-		print 'position after move: ', self.motionProxy.getRobotPosition(False)
+		self.motionProxy.moveTo((new_position[0] - __position_grid[0]) * 0.05, (new_position[1] - __position_grid[1]) * 0.05, 0)
+        print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
+        self.__position_grid = list(new_position[0], new_position[1], self.__position_grid[2])

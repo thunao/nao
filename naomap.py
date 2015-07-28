@@ -51,7 +51,6 @@ class NaoMap:
 	def _isedge(self, x, y):
 		for i in range(-1, 2):
 			for j in range(-1, 2):
-				if self.Map(x+i, y+j) == self.unknown:
+				if self.Map[(x+i, y+j)] == self.unknown:
 					return True
 		return False
-
