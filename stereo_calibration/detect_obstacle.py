@@ -10,8 +10,8 @@ def stereo_rectify(img1, img2, mapfn, qfn):
     Q = np.load(qfn)
     imgL = cv2.remap(img1, urmaps[0], urmaps[1], cv2.INTER_LINEAR)
     imgR = cv2.remap(img2, urmaps[2], urmaps[3], cv2.INTER_LINEAR)
-    cv2.imshow('Image L', imgL); cv2.imshow('Image R', imgR)
-    cv2.waitKey(0)
+    #cv2.imshow('Image L', imgL); cv2.imshow('Image R', imgR)
+    #cv2.waitKey(0)
     return imgL, imgR, Q
 
 '''
