@@ -1,5 +1,10 @@
+#encoding=utf8
+
 from sys import argv
 from naomap import NaoMap
+
+#use : python testmap.py testmap/testmapx.txt
+#x is to determined number, for example testmap1.txt
 
 def testmap(filename):
     x = -5
@@ -16,6 +21,7 @@ def testmap(filename):
                 mymap.addpoint(x, y, int(i))
                 y += 1
             x += 1
+            y = -5
         else:
             p.append(int(s))
     return (mymap, (p[0], p[1]), (p[2], p[3]))
