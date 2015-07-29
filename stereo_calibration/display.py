@@ -150,8 +150,9 @@ if __name__ == '__main__':
         print i
         stereosgbm_match(imgL, imgR, '3DPoints.ply', Q, i)
         display('3DPoints.ply', (640, 480), 0)'''
+    params = (0.04, 0.176, 0, 0, 0) #pitch, yaw, height, posx, posy = params
     imgL, imgR, Q = stereo_rectify('L4.jpg', 'R4.jpg', 'rectmap.npy', 'Q.npy')
     for h in [-24, -20, -18, -16]:
         print h, "-------------------------------------------"
-        stereosgbm_match(imgL, imgR, '_3DPoints.ply', Q, h)
+        stereosgbm_match(imgL, imgR, '_3DPoints.ply', Q, params, h)
         display('_3DPoints.ply', (640, 480), 0)

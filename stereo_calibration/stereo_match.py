@@ -11,7 +11,7 @@ def write_ply(fn, verts, colors):
 def rotate(pitch, yaw, points):
     R0 = np.zeros((3, 3), np.int32)
     R0[2][1] = R0[1][0] = -1
-    R0[0][2] = -1
+    R0[0][2] = 1
     print R0
     Rp, J = cv2.Rodrigues(np.asarray((0, pitch, 0)))
     Ry, J = cv2.Rodrigues(np.asarray((0, 0, yaw)))
@@ -19,7 +19,8 @@ def rotate(pitch, yaw, points):
     points = np.dot(R, points.T)
     return points.T
 
-def stereosgbm_match(imgL, imgR, fname, Q, eps):
+def stereosgbm_match(imgL, imgR, fname, Q, params, eps):
+    pitch, yaw, height, posx, posy = params
     # disparity range is tuned for 'aloe' image pair
     window_size = 6
     min_disp = 64
@@ -37,31 +38,36 @@ def stereosgbm_match(imgL, imgR, fname, Q, eps):
 
     print 'computing disparity...'
     disp = stereo.compute(imgL, imgR).astype(np.float32) / 16
-    print disp.min()
 
     print 'generating 3d point cloud...',
     points = cv2.reprojectImageTo3D(disp, Q)
     colors = cv2.cvtColor(imgL, cv2.COLOR_BGR2RGB)
     mask = disp > disp.min()
     points = points[mask]; colors = colors[mask]
-    print colors
 
+    #print points[:3]
+    #points = rotate(0.04, 0.176, points)
+    points = rotate(pitch, yaw, points)
     print points[:3]
-    points = rotate(0.04, 0.176, points)
+    points = points + np.asarray((posx, posy, height))
     print points[:3]
     mask = points[:, 2] > eps
     points = points[mask]
     colors = colors[mask]
 
-    write_ply(fname, points, colors)
-    print '%s saved' % fname
+    if not fname is None:
+        write_ply(fname, points, colors)
+        print '%s saved' % fname
 
-    cv2.imshow('left', imgL)
-    cv2.imshow('disparity', (disp - min_disp) / num_disp)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+        cv2.imshow('left', imgL)
+        cv2.imshow('disparity', (disp - min_disp) / num_disp)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+
+    return points
 
 if __name__ == '__main__':
+    params = (0.04, 0.176, 0, 0, 0) #pitch, yaw, height, posx, posy = params
     print 'loading images...'
     imgL = cv2.imread('L4.jpg')
     imgR = cv2.imread('R4.jpg')
@@ -69,4 +75,4 @@ if __name__ == '__main__':
                     [0, 1, 0,  -0.5*imgL.shape[0]],
                     [0, 0, 0, imgL.shape[1] * 0.8],
                     [0, 0, 1,                   0]])
-    stereosgbm_match(imgL, imgR, '3DPoints.ply', Q, 0)
+    stereosgbm_match(imgL, imgR, '3DPoints.ply', Q, params, 0)
