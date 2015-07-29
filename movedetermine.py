@@ -13,7 +13,7 @@ def _sign(x):
 
 class MoveDetermine:
 
- 	def __init__(self, x0, y0, size):
+ 	def __init__(self, x0 = 0, y0 = 0, size = 5):
 		self.mymap = NaoMap(x0, y0, size)
 
 	def _theta(self, x1, y1, x2, y2):
