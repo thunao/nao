@@ -1,3 +1,5 @@
+#encoding=utf8
+
 from sys import argv
 from naomap import NaoMap
 
