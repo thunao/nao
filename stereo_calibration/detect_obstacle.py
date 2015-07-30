@@ -1,9 +1,20 @@
-import cv2
+import cv2, os
 import numpy as np
 from stereo_match import stereosgbm_match
 
-REMAP_FILENAME = 'rectmap.npy'
-Q_MATRIX_FILENAME = 'Q.npy'
+REMAP_FILENAME = os.path.dirname(__file__) + '/rectmap.npy'
+Q_MATRIX_FILENAME = os.path.dirname(__file__) + '/Q.npy'
+
+def display2D(points):
+    points2D = np.asarray(points)[:, :2];
+    boundary = ((min(points2D[:, 0]), min(points2D[:, 1])),
+        (max(points2D[:, 0]) + 1, max(points2D[:, 1]) + 1))
+    bitmap = np.zeros(np.asarray(boundary[1]) - np.asarray(boundary[0]), np.float32)
+    for p in points2D:
+        bitmap[int(p[0] - boundary[0][0])][int(p[1] - boundary[0][1])] += 1
+    bitmap = np.asarray(bitmap / (bitmap.max() / 255.0), np.uint8)
+    cv2.imshow('Image', bitmap)
+    cv2.waitKey(0)
 
 def stereo_rectify(img1, img2, mapfn, qfn):
     urmaps = np.load(mapfn)
@@ -32,3 +43,4 @@ if __name__ == '__main__':
     img2 = cv2.imread('R4.jpg')
     points = detect_obstacle(img1, img2, (0, 0, 0), (0.04, 0.176), -18)
     print points
+    display2D(points)
