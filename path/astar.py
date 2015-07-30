@@ -114,7 +114,6 @@ class astar:
         this.path1 = []
         this.path1.append(end)
         while node.father is not None:
-            print node.x, node.y
             this.path1.append(node)
             node = node.father
         if len(this.path1) > 1:
@@ -160,9 +159,16 @@ class astar:
                     block_node = Node(None, x, y)
                     this.close_list[(block_node.x, block_node.y)] = block_node
 
+    def get_result(this):
+        global start, end
+        if this.find_the_path(start, end):
+            return this.mark_path(end.father)
+        else:
+            return start
+
+
 if __name__=='__main__':
     testm = testmap("testmap2.txt")
     t = astar(testm[0], testm[1], testm[2])
-    if t.find_the_path(start, end):
-        print t.mark_path(end.father)
+    print t.get_result()
 
