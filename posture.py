@@ -154,6 +154,15 @@ class Motion:
                 raise TrackError
             # make sure x does not change while y does
 
+            if new_position[1] > self.__position_grid[1]:
+                if self.__position_grid[2] == 0:
+                    self.turn(numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi / 2:
+                    pass
+                elif self.__position_grid[2] == numpy.pi:
+                    self.turn(- numpy.pi / 2)
+                    elif self.__position_grid
+
         self.motionProxy.moveTo((new_position[0] - self.__position_grid[0]) * 0.05, (new_position[1] - self.__position_grid[1]) * 0.05, 0)
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
         self.__position_grid = [new_position[0], new_position[1], self.__position_grid[2]]
