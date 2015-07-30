@@ -121,6 +121,7 @@ class Motion:
             if new_position[1] != self.__position_grid[1]:
                 raise TrackError
             # make sure x changes and y does not
+            dist = abs(new_position[0] - self.__position_grid[0])
 
             if new_position[0] > self.__position_grid[0]:
                 if self.__position_grid[2] == 0:
@@ -147,13 +148,37 @@ class Motion:
                     self.turn(- numpy.pi / 2)
                 else:
                     raise ValueError
-
         # y changes
         else:
             if new_position[1] == self.__position_grid[1]:
                 raise TrackError
             # make sure x does not change while y does
+            dist = abs(new_position[1] - self.__position_grid[1])
 
-        self.motionProxy.moveTo((new_position[0] - self.__position_grid[0]) * 0.05, (new_position[1] - self.__position_grid[1]) * 0.05, 0)
+            if new_position[1] > self.__position_grid[1]:
+                if self.__position_grid[2] == 0:
+                    self.turn(numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi / 2:
+                    pass
+                elif self.__position_grid[2] == numpy.pi:
+                    self.turn(- numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi * 3 / 2:
+                    self.turn(- numpy.pi)
+                else:
+                    raise ValueError
+            else:
+                if self.__position_grid[2] == 0:
+                    self.turn(- numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi / 2:
+                    self.turn(- numpy.pi)
+                elif self.__position_grid[2] == numpy.pi:
+                    self.turn(numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi * 3 / 2:
+                    pass
+
+
+
+        self.motionProxy.moveTo(dist, 0, 0)
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
-        self.__position_grid = [new_position[0], new_position[1], self.__position_grid[2]]
+        self.__position_grid[0] = new_position[0]
+        self.__position_grid[1] = new_position[1]
