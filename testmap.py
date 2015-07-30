@@ -18,7 +18,8 @@ def testmap(filename):
         print s
         if (len(s) > 5):
             for i in s:
-                mymap.addpoint(x, y, int(i))
+                if not int(i) == 0:
+                    mymap.addpoint(x, y, int(i))
                 y += 1
             x += 1
             y = -5

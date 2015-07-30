@@ -15,14 +15,14 @@ def rotAB(A, B):
 #Transform from A to B
 def transAB(A, B):
     cameraA = rotAB(HeadLoc(), A) * camera
-    cameraB = rotAB(LeadLoc(), B) * camera
-    return retAB(A, HeadLoc()) * (cameraB - cameraA)
+    cameraB = rotAB(HeadLoc(), B) * camera
+    return rotAB(A, HeadLoc()) * (cameraB - cameraA)
 
 def transMatAB(A, B):
     t = transAB(A, B).A
     x = t[0][0]
-    y = t[0][1]
-    z = t[0][2]
+    y = t[1][0]
+    z = t[2][0]
     return mat([
         [0, -z, y],
         [z, 0, -x],
@@ -44,11 +44,10 @@ class Distance:
 
 class LineGen:
     def __init__(self, A):
-        self.rot = RotAB(A, HeadLoc())
-        self.loc = RotAB(HeadLoc(), A) * camera + headJoint
+        self.rot = rotAB(A, HeadLoc())
+        self.loc = rotAB(HeadLoc(), A) * camera + headJoint
 
-    def gen(self, x, y):
-        P = mat([[x],[y],[1]])
+    def gen(self, p):
         return [self.loc, self.rot * (matMi * p)]
 
 def vec2lst(x):
@@ -56,6 +55,13 @@ def vec2lst(x):
     return [arr[0][0], arr[1][0], arr[2][0]]
 
 def lineCross2(a, b):
+    """
+    print "BEGIN"
+    print a
+    print b
+    print "END"
+    print
+    """
     p1 = a[0].A
     v1 = a[1].A
     p2 = b[0].A
@@ -102,7 +108,7 @@ def matchPoint(kp1, des1, kp2, des2, dist, idx1, idx2):
 
 def get3DPoint(heads, imgs):
     def toVec3(pt):
-        return mat(pt[0], pt[1], 1)
+        return mat([[pt[0]], [pt[1]], [1]])
     kps = []
     dess = []
     for img in imgs:
@@ -110,8 +116,8 @@ def get3DPoint(heads, imgs):
         kps.append([toVec3(item.pt) for item in kp])
         dess.append(des)
     tbl = []
-    for i in range(len(img)):
-        for j in range(i + 1, len(img)):
+    for i in range(len(imgs)):
+        for j in range(i + 1, len(imgs)):
             tbl += matchPoint(kps[i], dess[i], kps[j], dess[j],
                     Distance(heads[i], heads[j]), i, j)
 
@@ -164,8 +170,7 @@ def get3DPoint(heads, imgs):
     linegens = [LineGen(loc) for loc in heads]
 
     pt  = [lineCross(
-            [linegens[idx1].gen(kp[idx1][id1]) for idx1, id1 in ic])
+            [linegens[idx1].gen(kps[idx1][id1]) for idx1, id1 in ic])
             for ic in s]
 
-    print pt
     return pt

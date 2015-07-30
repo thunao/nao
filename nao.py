@@ -16,7 +16,6 @@ threshold = 10
 
 motion = Motion(ip = ip)
 move = MoveDetermine()
-#findball = Ball()
 #kan = tuxiangshibie()
 #xunlu = xunlu()
 
@@ -25,6 +24,11 @@ while True:
 	pics = move.lookaround()
 	#position = move.position()
 	#points = kan.shibie(position, pics)
+	for i in pics.keys():
+		for j in pics[i].keys():
+			find = Ball(pics[i][j].tolist())
+			if not find.getR() == 0:
+
 	# 
 	for i in points:
 		p = move.mymap.maptorobot(i[0], i[1])
