@@ -105,14 +105,54 @@ class Motion:
         print 'turning radius %f. ' %(rad)
 
         self.motionProxy.moveTo(0.0, 0.0, rad)
-        self.__position_grid[2] = self.__position_grid[2] + rad
+        self.__position_grid[2] = (self.__position_grid[2] + rad) % numpy.pi
+
+    # (x, y, rad)
+    def getPosition(self):
+        return tuple(self.__position_grid)
 
     # robot moves to a certain grid
-    def walkStraight(self, new_position):
+    def walkToPosition(self, new_position):
         # for debug
         print 'walk. '
 
-        assert (not new_position[0] == __position_grid[0]) or (not new_position[1] == __position_grid[1])
+        # x changes
+        if new_position[0] != self.__position_grid[0]:
+            if new_position[1] != self.__position_grid[1]:
+                raise TrackError
+            # make sure x changes and y does not
+
+            if new_position[0] > self.__position_grid[0]:
+                if self.__position_grid[2] == 0:
+                    # wont turn
+                    pass
+                elif self.__position_grid[2] == numpy.pi / 2:
+                    # right turn pi / 2
+                    self.turn(- numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi:
+                    self.turn(- numpy.pi)
+                elif self.__position_grid[2] == numpy.pi * 3 / 2:
+                    self.turn(numpy.pi / 2)
+                else:
+                    raise ValueError
+            else:
+                if self.__position_grid[2] == 0:
+                    self.turn(- numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi / 2:
+                    self.turn(numpy.pi / 2)
+                elif self.__position_grid[2] == numpy.pi:
+                    # wont turn
+                    pass
+                elif self.__position_grid[2] == numpy.pi * 3 / 2:
+                    self.turn(- numpy.pi / 2)
+                else:
+                    raise ValueError
+
+        # y changes
+        else:
+            if new_position[1] == self.__position_grid[1]:
+                raise TrackError
+            # make sure x does not change while y does
 
         self.motionProxy.moveTo((new_position[0] - self.__position_grid[0]) * 0.05, (new_position[1] - self.__position_grid[1]) * 0.05, 0)
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
