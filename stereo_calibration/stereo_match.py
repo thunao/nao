@@ -12,18 +12,16 @@ def rotate(pitch, yaw, points):
     R0 = np.zeros((3, 3), np.int32)
     R0[2][1] = R0[1][0] = -1
     R0[0][2] = 1
-    print R0
     Rp, J = cv2.Rodrigues(np.asarray((0, pitch, 0)))
     Ry, J = cv2.Rodrigues(np.asarray((0, 0, yaw)))
     R = np.dot(np.dot(Rp, Ry), R0)
     points = np.dot(R, points.T)
     return points.T
 
-def stereosgbm_match(imgL, imgR, fname, Q, params, eps):
+def stereosgbm_match(imgL, imgR, fname, Q, min_disp, params, eps):
     pitch, yaw, height, posx, posy = params
     # disparity range is tuned for 'aloe' image pair
     window_size = 6
-    min_disp = 64
     num_disp = 112 - min_disp
     stereo = cv2.StereoSGBM_create(minDisparity = min_disp,
         numDisparities = num_disp,
@@ -36,24 +34,28 @@ def stereosgbm_match(imgL, imgR, fname, Q, params, eps):
         speckleRange = 32
     )
 
-    print 'computing disparity...'
+    #print 'computing disparity...'
     disp = stereo.compute(imgL, imgR).astype(np.float32) / 16
 
-    print 'generating 3d point cloud...',
+    #print 'generating 3d point cloud...'
     points = cv2.reprojectImageTo3D(disp, Q)
     colors = cv2.cvtColor(imgL, cv2.COLOR_BGR2RGB)
     mask = disp > disp.min()
     points = points[mask]; colors = colors[mask]
 
+    #ROTATE the points to the world coordinate
     #print points[:3]
     #points = rotate(0.04, 0.176, points)
     points = rotate(pitch, yaw, points)
-    print points[:3]
+    #print points[:3]
     points = points + np.asarray((posx, posy, height))
-    print points[:3]
+    #print points[:3]
     mask = points[:, 2] > eps
     points = points[mask]
     colors = colors[mask]
+    '''mask = points[:, 0] < 150
+    points = points[mask]
+    colors = colors[mask]'''
 
     if not fname is None:
         write_ply(fname, points, colors)
