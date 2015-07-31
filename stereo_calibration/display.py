@@ -154,5 +154,5 @@ if __name__ == '__main__':
     imgL, imgR, Q = stereo_rectify('L4.jpg', 'R4.jpg', 'rectmap.npy', 'Q.npy')
     for h in [-24, -20, -18, -16]:
         print h, "-------------------------------------------"
-        stereosgbm_match(imgL, imgR, '_3DPoints.ply', Q, params, h)
+        stereosgbm_match(imgL, imgR, '_3DPoints.ply', Q, 64, params, h)
         display('_3DPoints.ply', (640, 480), 0)
