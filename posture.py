@@ -20,6 +20,7 @@ class Motion:
         self.motionProxy = ALProxy('ALMotion', ip, port)
         self.postureProxy = ALProxy('ALRobotPosture', ip, port)
         self.camProxy = ALProxy('ALVideoDevice', ip, port)
+        self.compassProxy = ALProxy('ALVisualCompassProxy', ip, port)
         resolution = vision_definitions.kVGA
         colorSpace = vision_definitions.kRGBColorSpace
         self.fps = 15
@@ -198,8 +199,10 @@ class Motion:
                 else:
                     raise ValueError
 
-        self.motionProxy.moveTo(dist, 0, 0)
-        self.motionProxy.waitUntilMoveIsFinished()
+        # self.motionProxy.moveTo(dist, 0, 0)
+        # self.motionProxy.waitUntilMoveIsFinished()
+        self.compassProxy.moveStraightTo(dist)
+        self.compassProxy.waitUntilTargetReached()
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
         self.__position_grid[0] = new_position[0]
         self.__position_grid[1] = new_position[1]
