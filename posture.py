@@ -141,7 +141,7 @@ class Motion:
             if new_position[1] != self.__position_grid[1]:
                 raise Exception('wrong target position. ')
             # make sure x changes and y does not
-            dist = abs(new_position[0] - self.__position_grid[0])
+            dist = abs(new_position[0] - self.__position_grid[0]) * 0.05
 
             if new_position[0] > self.__position_grid[0]:
                 if self.__position_grid[2] == 0:
@@ -173,7 +173,7 @@ class Motion:
             if new_position[1] == self.__position_grid[1]:
                 raise Exception('wrong target position. ')
             # make sure x does not change while y does
-            dist = abs(new_position[1] - self.__position_grid[1])
+            dist = abs(new_position[1] - self.__position_grid[1]) * 0.05
 
             if new_position[1] > self.__position_grid[1]:
                 if self.__position_grid[2] == 0:
