@@ -47,7 +47,7 @@ class Motion:
         self.motionProxy.rest()
 
     # 瞎 jb 看
-    def look(self):
+    def __look(self):
         ret = dict()
 
         pitch = self.motionProxy.getAngles('HeadPitch', False)
@@ -78,15 +78,15 @@ class Motion:
         ret = dict()
         angle = numpy.pi / 4
 
-        ret[0.0] = self.look()
+        ret[0.0] = self.__look()
 
         self.turn(angle)
 
-        ret[angle] = self.look()
+        ret[angle] = self.__look()
 
         self.turn(- 2 * angle)
 
-        ret[2 * numpy.pi - angle] = self.look()
+        ret[2 * numpy.pi - angle] = self.__look()
 
         self.turn(angle)
 
@@ -123,6 +123,8 @@ class Motion:
         print 'turning radius %f. ' %(rad)
 
         self.motionProxy.moveTo(0.0, 0.0, rad)
+        # blocking
+        self.motionProxy.waitUntilMoveIsFinished()
         self.__position_grid[2] = (self.__position_grid[2] + rad) % numpy.pi
 
     # (x, y, rad)
@@ -137,7 +139,7 @@ class Motion:
         # x changes
         if new_position[0] != self.__position_grid[0]:
             if new_position[1] != self.__position_grid[1]:
-                raise TrackError
+                raise Exception('wrong target position. ')
             # make sure x changes and y does not
             dist = abs(new_position[0] - self.__position_grid[0])
 
@@ -169,7 +171,7 @@ class Motion:
         # y changes
         else:
             if new_position[1] == self.__position_grid[1]:
-                raise TrackError
+                raise Exception('wrong target position. ')
             # make sure x does not change while y does
             dist = abs(new_position[1] - self.__position_grid[1])
 
@@ -197,6 +199,7 @@ class Motion:
                     raise ValueError
 
         self.motionProxy.moveTo(dist, 0, 0)
+        self.motionProxy.waitUntilMoveIsFinished()
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
         self.__position_grid[0] = new_position[0]
         self.__position_grid[1] = new_position[1]
