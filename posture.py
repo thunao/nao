@@ -175,8 +175,8 @@ class Motion:
                     self.turn(numpy.pi / 2)
                 elif self.__position_grid[2] == numpy.pi * 3 / 2:
                     pass
-
-
+                else:
+                    raise ValueError
 
         self.motionProxy.moveTo(dist, 0, 0)
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
