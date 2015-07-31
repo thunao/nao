@@ -158,7 +158,7 @@ class Motion:
                     raise ValueError
             else:
                 if self.__position_grid[2] == 0:
-                    self.turn(- numpy.pi / 2)
+                    self.turn(- numpy.pi)
                 elif self.__position_grid[2] == numpy.pi / 2:
                     self.turn(numpy.pi / 2)
                 elif self.__position_grid[2] == numpy.pi:
