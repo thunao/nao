@@ -47,9 +47,7 @@ class Motion:
         self.motionProxy.rest()
 
     # 瞎 jb 看
-    def lookAround(self):
-        print 'wow i\'m looking around... '
-
+    def look(self):
         ret = dict()
 
         pitch = self.motionProxy.getAngles('HeadPitch', False)
@@ -71,6 +69,26 @@ class Motion:
 
         self.motionProxy.setAngles('HeadPitch', 0.0, 0.1)
         self.motionProxy.setAngles('HeadYaw', 0.0, 0.1)
+
+        return ret
+
+    def lookAround(self):
+        print 'looking around... '
+
+        ret = dict()
+        angle = numpy.pi / 4
+
+        ret[0.0] = self.look()
+
+        self.turn(angle)
+
+        ret[angle] = self.look()
+
+        self.turn(- 2 * angle)
+
+        ret[2 * numpy.pi - angle] = self.look()
+
+        self.turn(angle)
 
         return ret
 
