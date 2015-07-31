@@ -1,6 +1,7 @@
 #encoding=utf8
 
 import posture
+import sys
 
 ip = "127.0.0.1"
 filename = "movetest.txt"
@@ -13,7 +14,9 @@ m = posture.Motion(ip)
 f = open(filename, 'r')
 line = f.readline()
 while len(line) > 0:
+	print line
 	l = line.strip()
 	target = l.split()
-	m.walkToPosition((target[0], target[1]))
+	m.walkToPosition((float(target[0]), float(target[1])))
+	line = f.readline()
 
