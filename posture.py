@@ -20,7 +20,7 @@ class Motion:
         self.motionProxy = ALProxy('ALMotion', ip, port)
         self.postureProxy = ALProxy('ALRobotPosture', ip, port)
         self.camProxy = ALProxy('ALVideoDevice', ip, port)
-        self.compassProxy = ALProxy('ALVisualCompassProxy', ip, port)
+        self.compassProxy = ALProxy('ALVisualCompass', ip, port)
         self.navi = ALProxy('ALNavigation', ip, port)
 
         resolution = vision_definitions.kVGA
