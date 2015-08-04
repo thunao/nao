@@ -21,6 +21,7 @@ class Motion:
         self.postureProxy = ALProxy('ALRobotPosture', ip, port)
         self.camProxy = ALProxy('ALVideoDevice', ip, port)
         self.compassProxy = ALProxy('ALVisualCompassProxy', ip, port)
+        self.navi = ALProxy('ALNavigation', ip, port)
         resolution = vision_definitions.kVGA
         colorSpace = vision_definitions.kRGBColorSpace
         self.fps = 15
@@ -47,12 +48,15 @@ class Motion:
         # rest, set all stiffness to 0
         self.motionProxy.rest()
 
+    def xiapao(self, x, y):
+        self.navi.navigateTo(x, y)
+
     # 瞎 jb 看
     def __look(self):
         ret = dict()
 
-        pitch = self.motionProxy.getAngles('HeadPitch', False)
-        yaw = self.motionProxy.getAngles('HeadYaw', False)
+        pitch = self.motionProxy.getAngles('HeadPitch', False)[0]
+        yaw = self.motionProxy.getAngles('HeadYaw', False)[0]
         print 'taking picture'
         img = self.__takePicture()
         ret[HeadLoc(left=yaw, down=pitch)] = img
