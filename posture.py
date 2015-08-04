@@ -1,4 +1,4 @@
-# encoding=utf-8
+﻿# encoding=utf-8
 
 __author__ = 'cty'
 __version__ = '0.1'
@@ -20,7 +20,7 @@ class Motion:
         self.motionProxy = ALProxy('ALMotion', ip, port)
         self.postureProxy = ALProxy('ALRobotPosture', ip, port)
         self.camProxy = ALProxy('ALVideoDevice', ip, port)
-        self.compassProxy = ALProxy('ALVisualCompassProxy', ip, port)
+        self.compassProxy = ALProxy('ALVisualCompass', ip, port)
         resolution = vision_definitions.kVGA
         colorSpace = vision_definitions.kRGBColorSpace
         self.fps = 15
@@ -51,8 +51,8 @@ class Motion:
     def __look(self):
         ret = dict()
 
-        pitch = self.motionProxy.getAngles('HeadPitch', False)
-        yaw = self.motionProxy.getAngles('HeadYaw', False)
+        pitch = self.motionProxy.getAngles('HeadPitch', False)[0]
+        yaw = self.motionProxy.getAngles('HeadYaw', False)[0]
         print 'taking picture'
         img = self.__takePicture()
         ret[HeadLoc(left=yaw, down=pitch)] = img
@@ -62,8 +62,8 @@ class Motion:
         self.motionProxy.setAngles('HeadYaw', random.uniform(-0.1, 0.1), 0.1)
         time.sleep(2.0)
 
-        pitch = self.motionProxy.getAngles('HeadPitch', False)
-        yaw = self.motionProxy.getAngles('HeadYaw', False)
+        pitch = self.motionProxy.getAngles('HeadPitch', False)[0]
+        yaw = self.motionProxy.getAngles('HeadYaw', False)[0]
         print 'taking picture'
         img = self.__takePicture()
         ret[HeadLoc(left=yaw, down=pitch)] = img
@@ -199,9 +199,9 @@ class Motion:
                 else:
                     raise ValueError
 
-        # self.motionProxy.moveTo(dist, 0, 0)
-        # self.motionProxy.waitUntilMoveIsFinished()
-        self.compassProxy.moveStraightTo(dist)
+        #self.motionProxy.moveTo(dist, 0, 0)
+        #self.motionProxy.waitUntilMoveIsFinished()
+        self.compassProxy.moveTo(dist, 0, 0)
         self.compassProxy.waitUntilTargetReached()
         print 'position: ', tuple(self.motionProxy.getRobotPosition(False))
         self.__position_grid[0] = new_position[0]

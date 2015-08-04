@@ -19,11 +19,12 @@ class NaoMap:
 		self.myx = 0
 		self.myy = 0
 		self.toward = (0, 1)
+		self.size = size
 
 	def robottomap(self, x, y):
-		return ((x - self.x0) / self.size, (y - self.y0) / self.size)
+		return ((int(x) - self.x0) / self.size, (int(y) - self.y0) / self.size)
 
-	def maptorobot(x, y):
+	def maptorobot(self, x, y):
 		return ((x + self.x0 + 0.5) * self.size, (y + self.y0 + 0.5) * self.size)
 
 	def moveto(self, x, y):
