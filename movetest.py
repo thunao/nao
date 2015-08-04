@@ -11,12 +11,13 @@ if len(sys.argv) >= 3:
 	filename = sys.argv[2]
 
 m = posture.Motion(ip)
-f = open(filename, 'r')
-line = f.readline()
-while len(line) > 0:
-	print line
-	l = line.strip()
-	target = l.split()
-	m.walkToPosition((float(target[0]), float(target[1])))
-	line = f.readline()
+# f = open(filename, 'r')
+# line = f.readline()
+# while len(line) > 0:
+# 	print line
+# 	l = line.strip()
+# 	target = l.split()
+# 	m.walkToPosition((float(target[0]), float(target[1])))
+# 	line = f.readline()
 
+m.xiapao(1, 0.4)

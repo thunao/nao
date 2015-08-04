@@ -50,7 +50,7 @@ class Motion:
         self.motionProxy.rest()
 
     def xiapao(self, x, y):
-        self.navi.navigateTo(x, y)
+        print self.navi.navigateTo(x, y)
 
     # 瞎 jb 看
     def __look(self):
