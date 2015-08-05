@@ -2,9 +2,11 @@ from PIL import Image,ImageFilter
 import cv2
 import numpy as np
 from gaussianblur import MyGaussianBlur
+from time import time
 
 class Ball():
     def __init__(self, list1):
+        tm = time()
         f = Image.new('RGB', (640, 480))
         fimage = Image.new('RGB', (640, 480))
         width = f.size[0]
@@ -93,11 +95,20 @@ class Ball():
                     f.putpixel((w, hei), (255, 255, 255))
                 else:
                     f.putpixel((w, hei), (0, 0, 0))
+        tp = time()
+        print "time1", tp - tm
+        tm = tp
         f = f.filter(MyGaussianBlur(radius=10))
+        tp = time()
+        print "time2", tp - tm
+        tm = tp
         fr,fg,fb = f.split()
         img = np.array(fr)
         result = img.copy()
         circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,1,5,param1=100,param2=30,minRadius=10,maxRadius=150)
+        tp = time()
+        print "time3", tp - tm
+        tm = tp
         count = 0
         self.loc1 = 0
         self.loc2 = 0
@@ -114,6 +125,9 @@ class Ball():
             self.ra = int(self.ra/count)
             cv2.circle(result,(self.loc1,self.loc2),self.ra,(0,255,0),1)
             cv2.circle(result,(self.loc1,self.loc2),2,(0,0,255),3)
+        tp = time()
+        print "time4", tp - tm
+        tm = tp
 
     def getLoc(self):
         return (self.loc1, self.loc2)
