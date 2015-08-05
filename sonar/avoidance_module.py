@@ -69,6 +69,7 @@ class avoidance(threading.Thread):
             self.memory = ALProxy("ALMemory", robot_ip, robot_port)
             self.sonar = ALProxy("ALSonar", robot_ip, robot_port)
             self.camera = ALProxy('ALVideoDevice', robot_ip, robot_port)
+            self.tts = ALProxy("ALTextToSpeech", robot_ip, robot_port)
         except Exception, e:
             print "Could not create proxy by ALProxy in Class avoidance"
             print "Error was: ", e
@@ -126,8 +127,7 @@ class avoidance(threading.Thread):
         width = image[0]; height = image[1]
         nchanels = image[2]; array = image[6]
 
-        i = self.__str2array(array, (height, width, nchanels))
-        return i
+        return self.__str2array(array, (height, width, nchanels))
 
     def getflag(self):
         '''
@@ -165,13 +165,14 @@ class avoidance(threading.Thread):
                 self.motion_head(- 45)
                 img_3 = self.takepicture()
                 self.motion_head(0)
-                cv2.imwrite("img_1.png", img_1);
-                cv2.imwrite("img_2.png", img_2);
-                cv2.imwrite("img_3.png", img_3);
+                # cv2.imwrite("img_1.png", img_1)
+                # cv2.imwrite("img_2.png", img_2)
+                # cv2.imwrite("img_3.png", img_3)
                 check = mul.Pool(3).map(checkball, [img_1, img_2, img_3])
                 # 0. 检测有没有球
                 if check[0] or check[1] or check[2]:
                     print '****** HEY BALL! ******'
+                    self.tts.say('hey ball')
                     if check[0]:
                         self.image = img_1
                     elif check[1]:
@@ -180,14 +181,7 @@ class avoidance(threading.Thread):
                         self.image = img_3
                     break
                 else:
-                    print 'NO'
-                """
-                if self.checkball(img_1) or self.checkball(img_2) or self.checkball(img_3):
-                    print '****** HEY BALL! ******'
-                    break
-                else:
-                	print 'NO'
-                """
+                    print '****** NO BALL. ******'
             else:
                 # 1. 检测障碍物
                 self.avoid_check()
@@ -219,7 +213,7 @@ class avoidance(threading.Thread):
         right_value= self.memory.getData("Device/SubDeviceList/US/Right/Sensor/Value")
         if left_value > self.check_distance:         # 超过安全距离，无障碍
             self.obstacle_left = False
-        else:                 
+        else:
             self.obstacle_left = True                # 小于安全距离，有障碍
 
         if right_value > self.check_distance:        # 超过安全距离，无障碍
