@@ -7,114 +7,55 @@ from time import time
 class Ball():
     def __init__(self, list1):
         tm = time()
-        f = Image.new('RGB', (640, 480))
-        fimage = Image.new('RGB', (640, 480))
-        width = f.size[0]
-        height = f.size[1]
-        for hei in range(0, height):
-            for w in range(0, width):
-                f.putpixel((w, hei), tuple(list1[hei * 640 + w].tolist()))
-                fimage.putpixel((w, hei), tuple(list1[hei * 640 + w].tolist()))
-        fimage.save("fff.jpg")
+        width = 640
+        height = 480
         matrix = [[0 for col in range(width)] for row in range(height)]
-        res = [[0 for col in range(width)] for row in range(height)]
+        imgX = [[[0] for col in range(width)] for row in range(height)]
         tv = 0
+        hsv = cv2.cvtColor(list1, cv2.COLOR_BGR2HSV)
+        hsv = hsv.tolist()
+        list1 = list1.tolist()
         for hei in range(0, height):
             for w in range(0, width):
-                pixel = f.getpixel((w, hei))
-                r = 1.0*pixel[0]/255
-                g = 1.0*pixel[1]/255
-                b = 1.0*pixel[2]/255
-                tv += self.max3(r, g, b)
+                tv += hsv[hei][w][2] / 255.
+        if tv > 210000:
+            threshole = 0.9
+        elif tv > 150000:
+            threshole = 0.75
+        elif tv > 120000:
+            threshole = 0.7
+        elif tv > 90000:
+            threshole = 0.5
+        elif tv > 60000:
+            threshole = 0.4
+        else:
+            threshole = 0.35
         for hei in range(0, height):
             for w in range(0, width):
-                pixel = f.getpixel((w, hei))
-                r = 1.0*pixel[0]/255
-                g = 1.0*pixel[1]/255
-                b = 1.0*pixel[2]/255
-                ma = self.max3(r, g, b)
-                mi = self.min3(r, g, b)
-                if ma == mi:
-                    h = 0
-                elif ma == r and g >= b:
-                    h = 60*(g-b)/(ma-mi)
-                elif ma == r and g < b:
-                    h = 60*(g-b)/(ma-mi)+360
-                elif ma == g:
-                    h = 60*(b-r)/(ma-mi)+120
-                elif ma == b:
-                    h = 60*(r-g)/(ma-mi)+240
-                else:
-                    h = 0
-                v = ma
-                if ma == 0:
-                    s = 0
-                else:
-                    s = 1 - 1.0*mi/ma
+                h, s, v = hsv[hei][w]
+                b, g, r = list1[hei][w]
+                h *= 2
+                s /= 255.
+                v /= 255.
                 if ((h < 30 and h > 0) or (h > 355) or (h == 0 and r > g)) and s > 0.1:
-                    if tv > 210000:
-                        if v > 0.9:
-                            matrix[hei][w] = 1
-                    elif tv > 150000:
-                        if v > 0.75:
-                            matrix[hei][w] = 1
-                    elif tv > 120000:
-                        if v > 0.7:
-                            matrix[hei][w] = 1
-                    elif tv > 90000:
-                        if v > 0.5:
-                            matrix[hei][w] = 1
-                    elif tv > 60000:
-                        if v > 0.4:
-                            matrix[hei][w] = 1
-                    else:
-                        if v > 0.35:
-                            matrix[hei][w] = 1
+                    if v > threshole:
+                        matrix[hei][w] = 1
         for hei in range(1, height-1):
             for w in range(1, width-1):
                 count = 0
                 if matrix[hei][w] == 1:
-                    if matrix[hei-1][w] == 1:
-                        count += 1
-                    if matrix[hei-1][w-1] == 1:
-                        count += 1
-                    if matrix[hei-1][w+1] == 1:
-                        count += 1
-                    if matrix[hei][w-1] == 1:
-                        count += 1
-                    if matrix[hei][w+1] == 1:
-                        count += 1
-                    if matrix[hei+1][w] == 1:
-                        count += 1
-                    if matrix[hei+1][w-1] == 1:
-                        count += 1
-                    if matrix[hei+1][w+1] == 1:
-                        count += 1
-                if count >= 5:
-                    res[hei][w] = 1
-                    f.putpixel((w, hei), (255, 255, 255))
-                else:
-                    f.putpixel((w, hei), (0, 0, 0))
-        tp = time()
-        print "time1", tp - tm
-        tm = tp
-        f = f.filter(MyGaussianBlur(radius=10))
-        tp = time()
-        print "time2", tp - tm
-        tm = tp
-        fr,fg,fb = f.split()
-        img = np.array(fr)
-        result = img.copy()
-        circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,1,5,param1=100,param2=30,minRadius=10,maxRadius=150)
-        tp = time()
-        print "time3", tp - tm
-        tm = tp
+                    count = (matrix[hei-1][w-1] + matrix[hei-1][w] + matrix[hei-1][w+1]
+                        + matrix[hei][w-1] + matrix[hei][w+1]
+                        + matrix[hei+1][w-1] + matrix[hei+1][w] + matrix[hei+1][w+1])
+                imgX[hei][w][0] = 255 if count >= 5 else 0
+        f = cv2.GaussianBlur(np.array(imgX, np.uint8), (11, 11), 5)
+        circles = cv2.HoughCircles(f,cv2.HOUGH_GRADIENT,1,5,param1=100,param2=30,minRadius=10,maxRadius=150)
         count = 0
         self.loc1 = 0
         self.loc2 = 0
         self.ra = 0
         if circles is not None:
-            fimage.save("found.jpg")
+            #fimage.save("found.jpg")
             for i in circles[0,:]:
                 count += 1
                 self.loc1 += i[0]
@@ -123,11 +64,8 @@ class Ball():
             self.loc1 = int(self.loc1/count)
             self.loc2 = int(self.loc2/count)
             self.ra = int(self.ra/count)
-            cv2.circle(result,(self.loc1,self.loc2),self.ra,(0,255,0),1)
-            cv2.circle(result,(self.loc1,self.loc2),2,(0,0,255),3)
-        tp = time()
-        print "time4", tp - tm
-        tm = tp
+            #cv2.circle(result,(self.loc1,self.loc2),self.ra,(0,255,0),1)
+            #cv2.circle(result,(self.loc1,self.loc2),2,(0,0,255),3)
 
     def getLoc(self):
         return (self.loc1, self.loc2)

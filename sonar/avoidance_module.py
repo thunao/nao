@@ -14,7 +14,18 @@ import numpy, cv2
 import vision_definitions
 from ball import Ball
 import time
+import multiprocessing as mul
 
+
+def checkball(img_list):
+    '''
+        检测有没有球，若有返回 True
+    '''
+    ball_checker = Ball(img_list)
+    if ball_checker.getR() != 0:
+        return True
+    else:
+        return False
 
 class avoidance(threading.Thread):
     '''
@@ -29,19 +40,29 @@ class avoidance(threading.Thread):
         self.go_back = False
         self.run_flag = False            # 避障运行标志位，为False时表示退出避障循环
         # 障碍物全局变量
-        self.check_distance = 0.45    # 设置检测的安全距离
+        self.check_distance = 0.4    # 设置检测的安全距离
         self.too_close_distance = 0.20
         self.delay_seconds = 0.2    # 设置延时事件, 单位：秒
         self.move_speed = 0.1        # 移动速度, 单位: m/s
         self.turn_angle = 10        # 旋转角度，单位: 角度
         self.wall_angle = 45
-        self.test_angle = 90
+        self.test_angle = 75
         self.walk_delay = 0.3
-        self.turn_delay = 3.0
+        self.turn_delay = 1.0
+        self.test_delay = 3.0
+        self.run_time = 600
         self.state = 0
         self.num = 0
+        self.test_num = 0
         self.take_picture_num = 0
-        self.test_turn_right = 13
+        self.take_picture_target = 19
+        self.test_turn_right = 20
+        self.turn_head_delay = 1.0
+        self.avoid_hand = 0
+        self.image = None
+        self.last_left = 100
+        self.last_right = 100
+        self.delte_distance = 0.1
         # naoqi.ALProxy
         try:
             self.motion = ALProxy("ALMotion", robot_ip, robot_port)
@@ -74,7 +95,7 @@ class avoidance(threading.Thread):
             for j in range(0, shape[1]):
                 p2 = j * shape[2]
                 for c in range(0, shape[2]):
-                    p3 = c
+                    p3 = shape[2] - c - 1
                     image[i, j, c] = ord(string[p1 + p2 + p3])
         return image
 
@@ -106,19 +127,21 @@ class avoidance(threading.Thread):
         nchanels = image[2]; array = image[6]
 
         i = self.__str2array(array, (height, width, nchanels))
-        return i.reshape(-1, 3)
+        return i
 
     def getflag(self):
         '''
             返回运行FLAG，为True表示正在运行, 为False表示停止工作;
         '''
         return self.run_flag
+
     def setflag(self, bools):
         '''
             设置运行FLAG, 从而控制避障功能的on/off;
         '''
         self.run_flag = bools
         return self.run_flag
+
     def run(self):
         '''
             固定间隔循环检测是否存在障碍，根据障碍物标志决定机器人的行走方向
@@ -133,7 +156,7 @@ class avoidance(threading.Thread):
         self.sonar.subscribe("Class_avoidance")
         while self.run_flag == True:            # 避障标识为True，则持续循环检测
             self.take_picture_num += 1
-            if self.take_picture_num == 20:
+            if self.take_picture_num == self.take_picture_target:
                 self.take_picture_num = 0
                 self.motion_stand()
                 img_1 = self.takepicture()
@@ -142,12 +165,29 @@ class avoidance(threading.Thread):
                 self.motion_head(- 45)
                 img_3 = self.takepicture()
                 self.motion_head(0)
+                cv2.imwrite("img_1.png", img_1);
+                cv2.imwrite("img_2.png", img_2);
+                cv2.imwrite("img_3.png", img_3);
+                check = mul.Pool(3).map(checkball, [img_1, img_2, img_3])
                 # 0. 检测有没有球
+                if check[0] or check[1] or check[2]:
+                    print '****** HEY BALL! ******'
+                    if check[0]:
+                        self.image = img_1
+                    elif check[1]:
+                        self.image = img_2
+                    elif check[2]:
+                        self.image = img_3
+                    break
+                else:
+                    print 'NO'
+                """
                 if self.checkball(img_1) or self.checkball(img_2) or self.checkball(img_3):
                     print '****** HEY BALL! ******'
                     break
                 else:
                 	print 'NO'
+                """
             else:
                 # 1. 检测障碍物
                 self.avoid_check()
@@ -163,6 +203,10 @@ class avoidance(threading.Thread):
         # 机器人复位
         self.motion.stopMove()
         self.motion.rest()
+        if self.image is not None:
+            cv2.imshow("FFF", self.image)
+            cv2.waitKey(0)
+
 
     def stop(self):
         self.setflag(False)
@@ -175,17 +219,22 @@ class avoidance(threading.Thread):
         right_value= self.memory.getData("Device/SubDeviceList/US/Right/Sensor/Value")
         if left_value > self.check_distance:         # 超过安全距离，无障碍
             self.obstacle_left = False
-        else:                                        # 小于安全距离，有障碍
-            self.obstacle_left = True
-        if right_value > self.check_distance:         # 超过安全距离，无障碍
+        else:                 
+            self.obstacle_left = True                # 小于安全距离，有障碍
+
+        if right_value > self.check_distance:        # 超过安全距离，无障碍
             self.obstacle_right = False
         else:                                        # 小于安全距离，有障碍
             self.obstacle_right = True
+        if self.obstacle_right == True or self.obstacle_left:
+            if abs(right_value - left_value) < self.delte_distance:
+                self.obstacle_left = True
+                self.obstacle_right = True
         if left_value < self.too_close_distance and right_value < self.too_close_distance:
             self.go_back = True
         else:
             self.go_back = False
-        print "left: %f, right: %f"% (left_value, right_value)
+        print "now state is %d, left: %f, right: %f"% (self.state, left_value, right_value)
 
     def avoid_operation(self):
         #     left        right                operation
@@ -205,15 +254,34 @@ class avoidance(threading.Thread):
             if self.num == self.test_turn_right:
                 self.state = 2
                 self.motion_turn_right(self.test_angle)
-                self.delay_seconds = self.turn_delay
+                self.delay_seconds = self.test_delay
                 self.num = 0
                 return
         elif self.state == 2:
-            self.state = 1
             if self.obstacle_left == True and self.obstacle_right == True:
-                self.motion_turn_left(self.wall_angle)
-                self.delay_seconds = self.turn_delay
+                self.motion_turn_left(self.test_angle)
+                self.delay_seconds = self.test_delay
+                self.state = 1
+            else:
+                #self.motion_turn_left(self.test_angle)
+                #self.delay_seconds = self.test_delay
+                self.state = 1
+                self.test_num = 0
             return
+        elif self.state == 3:
+            self.test_num += 1
+            if self.test_num > self.avoid_hand:
+                self.motion_turn_right(self.test_angle)
+                self.delay_seconds = self.test_delay
+                self.state = 1
+                self.test_num = 0
+                return
+            elif self.obstacle_left == True and self.obstacle_right == True:
+                self.motion_turn_right(self.test_angle)
+                self.delay_seconds = self.test_delay
+                self.state = 1
+                self.test_num = 0
+                return
 
         if self.obstacle_left == False:
             if self.obstacle_right == False:
@@ -240,14 +308,20 @@ class avoidance(threading.Thread):
         self.motion.move(-1.0 * self.move_speed, 0, 0)
 
     def motion_turn_left(self, turn_angle):
-        self.motion.post.moveTo(0, 0, turn_angle * almath.TO_RAD)
+        if not turn_angle < self.wall_angle:
+            self.motion_back()
+            time.sleep(self.walk_delay*2)
+        self.motion.moveTo(0, 0, turn_angle * almath.TO_RAD)
 
     def motion_turn_right(self, turn_angle):
-        self.motion.post.moveTo(0, 0, -1.0 * turn_angle * almath.TO_RAD)
+        if not turn_angle < self.wall_angle:
+            self.motion_back()
+            time.sleep(self.walk_delay*2)
+        self.motion.moveTo(0, 0, -1.0 * turn_angle * almath.TO_RAD)
 
     def motion_head(self, angle):
-        self.motion.setAngles('HeadYaw', angle * almath.TO_RAD, 0.1)
-        time.sleep(2.0)
+        self.motion.setAngles('HeadYaw', angle * almath.TO_RAD, 0.3)
+        time.sleep(self.turn_head_delay)
 
 def main(robot_IP, robot_PORT=9559):
     # ----------> avoidance <----------
@@ -256,7 +330,7 @@ def main(robot_IP, robot_PORT=9559):
         avoid.start()                    # start()只能执行一次, 会开新线程运行;
         # run()可以多次执行, 但是会在本线程运行;
         # start()开新线程, 非阻塞, 因此这里延时一段时间以执行避障;
-        time.sleep(300)
+        time.sleep(avoid.run_time)
 #        avoid.setflag(False)             # 方法1: 通过设置标志位为False来停止
         avoid.stop()                    # 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.
 
