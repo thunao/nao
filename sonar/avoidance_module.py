@@ -9,8 +9,11 @@ import almath            # almath.TO_RAD, 角度转弧度
 import argparse            # 参数解析
 import threading        # 多线程类
 from naoqi import ALProxy
-from random import randint
-import numpy
+from random import randint, uniform
+import numpy, cv2
+import vision_definitions
+from ball import Ball
+import time
 
 
 class avoidance(threading.Thread):
@@ -26,18 +29,19 @@ class avoidance(threading.Thread):
         self.go_back = False
         self.run_flag = False            # 避障运行标志位，为False时表示退出避障循环
         # 障碍物全局变量
-        self.check_distance = 0.44    # 设置检测的安全距离
-        self.too_close_distance = 0.25
+        self.check_distance = 0.45    # 设置检测的安全距离
+        self.too_close_distance = 0.20
         self.delay_seconds = 0.2    # 设置延时事件, 单位：秒
         self.move_speed = 0.1        # 移动速度, 单位: m/s
         self.turn_angle = 10        # 旋转角度，单位: 角度
         self.wall_angle = 45
         self.test_angle = 90
         self.walk_delay = 0.3
-        self.turn_delay = 5.0
+        self.turn_delay = 3.0
         self.state = 0
         self.num = 0
-        self.test_turn_right = 20
+        self.take_picture_num = 0
+        self.test_turn_right = 13
         # naoqi.ALProxy
         try:
             self.motion = ALProxy("ALMotion", robot_ip, robot_port)
@@ -59,25 +63,29 @@ class avoidance(threading.Thread):
         # in case of camera subscribe overflow
         assert self.video_client is not None
 
-        def __str2array(self, string, shape):
-            '''
-                转换图像格式
-            '''
-            assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
-            image = numpy.zeros(shape, numpy.uint8)
-            for i in range(0, shape[0]):
-                p1 = i * shape[1] * shape[2]
-                for j in range(0, shape[1]):
-                    p2 = j * shape[2]
-                    for c in range(0, shape[2]):
-                        p3 = shape[2] - c - 1
-                        image[i, j, c] = ord(string[p1 + p2 + p3])
-            return image
+    def __str2array(self, string, shape):
+        '''
+            转换图像格式
+        '''
+        assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
+        image = numpy.zeros(shape, numpy.uint8)
+        for i in range(0, shape[0]):
+            p1 = i * shape[1] * shape[2]
+            for j in range(0, shape[1]):
+                p2 = j * shape[2]
+                for c in range(0, shape[2]):
+                    p3 = c
+                    image[i, j, c] = ord(string[p1 + p2 + p3])
+        return image
 
     def checkball(self, img_list):
         '''
             检测有没有球，若有返回 True
         '''
+        # print 'len: ', len(img_list)
+        # print 'len: ', len(img_list[0])
+        # print type(img_list[0])
+        # print img_list[0]
         ball_checker = Ball(img_list)
         if ball_checker.getR() != 0:
             return True
@@ -88,12 +96,17 @@ class avoidance(threading.Thread):
         '''
             拍照拍照搜球
         '''
+        assert self.camera is not None
+        assert self.video_client is not None
         image = self.camera.getImageRemote(self.video_client)
+
+        assert image is not None
 
         width = image[0]; height = image[1]
         nchanels = image[2]; array = image[6]
 
-        return self.__str2array(array, (height, width, nchanels)).reshape(-1, 3)
+        i = self.__str2array(array, (height, width, nchanels))
+        return i.reshape(-1, 3)
 
     def getflag(self):
         '''
@@ -119,21 +132,37 @@ class avoidance(threading.Thread):
         # 订阅超声波
         self.sonar.subscribe("Class_avoidance")
         while self.run_flag == True:            # 避障标识为True，则持续循环检测
-            # 0. 检测有没有球
-            if self.checkball(self.takepicture()):
-                print '****** HEY BALL! ******'
-                break
-            # 1. 检测障碍物
-            self.avoid_check()
-            # 2. 根据障碍物标志决定行走方向
-            self.avoid_operation()
-            # 3. 延时
-            time.sleep(self.delay_seconds)
+            self.take_picture_num += 1
+            if self.take_picture_num == 20:
+                self.take_picture_num = 0
+                self.motion_stand()
+                img_1 = self.takepicture()
+                self.motion_head(45)
+                img_2 = self.takepicture()
+                self.motion_head(- 45)
+                img_3 = self.takepicture()
+                self.motion_head(0)
+                # 0. 检测有没有球
+                if self.checkball(img_1) or self.checkball(img_2) or self.checkball(img_3):
+                    print '****** HEY BALL! ******'
+                    break
+                else:
+                	print 'NO'
+            else:
+                # 1. 检测障碍物
+                self.avoid_check()
+                # 2. 根据障碍物标志决定行走方向
+                self.avoid_operation()
+                # 3. 延时
+                time.sleep(self.delay_seconds)
         # 直到run_flag为False才会跳出while循环;
         # 取消订阅超声波
+        print 'unsubscribing...'
         self.sonar.unsubscribe("Class_avoidance")
+        self.camera.unsubscribe(self.video_client)
         # 机器人复位
         self.motion.stopMove()
+        self.motion.rest()
 
     def stop(self):
         self.setflag(False)
@@ -152,7 +181,7 @@ class avoidance(threading.Thread):
             self.obstacle_right = False
         else:                                        # 小于安全距离，有障碍
             self.obstacle_right = True
-        if left_value < self.too_close_distance or right_value < self.too_close_distance:
+        if left_value < self.too_close_distance and right_value < self.too_close_distance:
             self.go_back = True
         else:
             self.go_back = False
@@ -201,6 +230,9 @@ class avoidance(threading.Thread):
                 self.motion_turn_left(self.wall_angle)
                 return
 
+    def motion_stand(self):
+        self.motion.stopMove()
+
     def motion_go(self):
         self.motion.move(self.move_speed, 0, 0)
 
@@ -213,6 +245,10 @@ class avoidance(threading.Thread):
     def motion_turn_right(self, turn_angle):
         self.motion.post.moveTo(0, 0, -1.0 * turn_angle * almath.TO_RAD)
 
+    def motion_head(self, angle):
+        self.motion.setAngles('HeadYaw', angle * almath.TO_RAD, 0.1)
+        time.sleep(2.0)
+
 def main(robot_IP, robot_PORT=9559):
     # ----------> avoidance <----------
     avoid = avoidance(robot_IP, robot_PORT)
@@ -220,20 +256,20 @@ def main(robot_IP, robot_PORT=9559):
         avoid.start()                    # start()只能执行一次, 会开新线程运行;
         # run()可以多次执行, 但是会在本线程运行;
         # start()开新线程, 非阻塞, 因此这里延时一段时间以执行避障;
-        time.sleep(1000)
+        time.sleep(300)
 #        avoid.setflag(False)             # 方法1: 通过设置标志位为False来停止
         avoid.stop()                    # 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.
 
         # 想要再次开启避障，需要再新建一个类对象
         # 由于线程类只能调用start开启新线程一次，因此要多次使用超声波避障，需要实例化多个类；
-        avoid2 = avoidance(robot_IP, robot_PORT)
-        avoid2.start()
-        time.sleep(10)
-        avoid2.stop()
+        # avoid2 = avoidance(robot_IP, robot_PORT)
+        # avoid2.start()
+        # time.sleep(10)
+        # avoid2.stop()
     except KeyboardInterrupt:
         # 中断程序
         avoid.stop()
-        avoid2.stop()
+        # avoid2.stop()
         print "Interrupted by user, shutting down"
         sys.exit(0)
 
