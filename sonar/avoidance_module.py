@@ -10,6 +10,7 @@ import argparse			# 参数解析
 import threading    	# 多线程类
 from naoqi import ALProxy
 from random import randint
+import numpy
 
 class avoidance(threading.Thread):
 	'''
@@ -41,9 +42,57 @@ class avoidance(threading.Thread):
 			self.motion = ALProxy("ALMotion", robot_ip, robot_port)
 			self.memory = ALProxy("ALMemory", robot_ip, robot_port)
 			self.sonar = ALProxy("ALSonar", robot_ip, robot_port)
+			self.camera = ALProxy('ALVideoDevice', robot_ip, robot_port)
 		except Exception, e:
 			print "Could not create proxy by ALProxy in Class avoidance"
 			print "Error was: ", e
+
+        resolution = vision_definitions.kVGA
+        colorSpace = vision_definitions.kRGBColorSpace
+        fps = 15
+		try:
+        	self.video_client = self.camera.subscribeCamera('python_client', 1, resolution, colorSpace, fps)
+		except Exception, e:
+			print 'Subscribe error'
+			print 'Error was: ', e
+        # in case of camera subscribe overflow
+        assert self.video_client is not None
+
+    def __str2array(self, string, shape):
+		'''
+			转换图像格式
+		'''
+        assert len(string) == shape[0] * shape[1] * shape[2], len(shape) == 3
+        image = numpy.zeros(shape, numpy.uint8)
+        for i in range(0, shape[0]):
+            p1 = i * shape[1] * shape[2]
+            for j in range(0, shape[1]):
+                p2 = j * shape[2]
+                for c in range(0, shape[2]):
+                    p3 = shape[2] - c - 1
+                    image[i, j, c] = ord(string[p1 + p2 + p3])
+        return image
+
+	def checkball(self, img_list):
+		'''
+			检测有没有球，若有返回 True
+		'''
+		ball_checker = Ball(img_list)
+		if ball_checker.getR() != 0:
+			return True
+		else:
+			return False
+
+	def takepicture(self):
+		'''
+			拍照拍照搜球
+		'''
+        image = self.camera.getImageRemote(self.video_client)
+
+        width = image[0]; height = image[1]
+        nchanels = image[2]; array = image[6]
+
+        return self.__str2array(array, (height, width, nchanels)).reshape(-1, 3)
 
 	def getflag(self):
 		'''
@@ -57,7 +106,7 @@ class avoidance(threading.Thread):
 		self.run_flag = bools
 		return self.run_flag
 	def run(self):
-		''' 
+		'''
 			固定间隔循环检测是否存在障碍，根据障碍物标志决定机器人的行走方向
 			通过设置run_flag标志位为False来停止。
 		'''
@@ -69,6 +118,10 @@ class avoidance(threading.Thread):
 		# 订阅超声波
 		self.sonar.subscribe("Class_avoidance")
 		while self.run_flag == True:			# 避障标识为True，则持续循环检测
+			# 0. 检测有没有球
+			if self.checkball(self.takepicture())
+				print '****** HEY BALL! ******'
+				break
 			# 1. 检测障碍物
 			self.avoid_check()
 			# 2. 根据障碍物标志决定行走方向
@@ -163,12 +216,12 @@ def main(robot_IP, robot_PORT=9559):
 	# ----------> avoidance <----------
 	avoid = avoidance(robot_IP, robot_PORT)
 	try:
-		avoid.start()					# start()只能执行一次, 会开新线程运行; 
+		avoid.start()					# start()只能执行一次, 会开新线程运行;
 										# run()可以多次执行, 但是会在本线程运行;
 		# start()开新线程, 非阻塞, 因此这里延时一段时间以执行避障;
 		time.sleep(1000)
 #		avoid.setflag(False)		 	# 方法1: 通过设置标志位为False来停止
-		avoid.stop()					# 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.	
+		avoid.stop()					# 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.
 
 		# 想要再次开启避障，需要再新建一个类对象
 		# 由于线程类只能调用start开启新线程一次，因此要多次使用超声波避障，需要实例化多个类；
