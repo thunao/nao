@@ -1,3 +1,5 @@
+#encoding=utf-8
+
 """
 	超声波避障模块
 """
@@ -19,21 +21,21 @@ class avoidance(threading.Thread):
 		# 障碍物标志
 		self.obstacle_left = False 		# True则左侧有障碍
 		self.obstacle_right = False  	# True则右侧有障碍
-		self.empty_right = False 		# True则右侧有道路
+		self.go_back = False
 		self.run_flag = False			# 避障运行标志位，为False时表示退出避障循环
 		# 障碍物全局变量
 		self.check_distance = 0.44	# 设置检测的安全距离
+		self.too_close_distance = 0.25
 		self.delay_seconds = 0.2	# 设置延时事件, 单位：秒
 		self.move_speed = 0.1		# 移动速度, 单位: m/s
 		self.turn_angle = 10		# 旋转角度，单位: 角度
 		self.wall_angle = 45
 		self.test_angle = 90
-		self.far_distance = 1.5
 		self.walk_delay = 0.3
 		self.turn_delay = 5.0
 		self.state = 0
 		self.num = 0
-		self.test_turn_right = 21
+		self.test_turn_right = 20
 		# naoqi.ALProxy
 		try:
 			self.motion = ALProxy("ALMotion", robot_ip, robot_port)
@@ -78,8 +80,10 @@ class avoidance(threading.Thread):
 		self.sonar.unsubscribe("Class_avoidance")
 		# 机器人复位
 		self.motion.stopMove()
+
 	def stop(self):
 		self.setflag(False)
+
 	def avoid_check(self):
 		'''
 			检测超声波数值，设置标志位
@@ -94,10 +98,12 @@ class avoidance(threading.Thread):
 			self.obstacle_right = False
 		else:										# 小于安全距离，有障碍
 			self.obstacle_right = True
-		if right_value > self.far_distance:
-			self.empty_right = True 				# 大于过远距离，应右转
+		if left_value < self.too_close_distance or right_value < self.too_close_distance:
+			self.go_back = True
 		else:
-			self.empty_right = False 				# 小于过远距离，正常行走
+			self.go_back = False
+		print "left: %f, right: %f"% (left_value, right_value)
+
 	def avoid_operation(self):
 		# 	left		right				operation
 		#   ----------------------------------------------
@@ -106,6 +112,11 @@ class avoidance(threading.Thread):
 		#	True		False				左侧障碍，右转
 		#	True		True				左右障碍，左转
 		self.delay_seconds = self.walk_delay
+
+		if self.go_back == True:
+			self.motion_back()
+			return
+
 		if self.state == 1:
 			self.num += 1
 			if self.num == self.test_turn_right:
@@ -117,7 +128,7 @@ class avoidance(threading.Thread):
 		elif self.state == 2:
 			self.state = 1
 			if self.obstacle_left == True and self.obstacle_right == True:
-				self.motion_turn_right(self.wall_angle)
+				self.motion_turn_left(self.wall_angle)
 				self.delay_seconds = self.turn_delay
 			return
 
@@ -131,13 +142,20 @@ class avoidance(threading.Thread):
 				self.motion_turn_right(self.turn_angle)
 			else:
 				self.state = 1
+				self.num = 0
 				self.delay_seconds = self.turn_delay
 				self.motion_turn_left(self.wall_angle)
 				return
+
 	def motion_go(self):
 		self.motion.move(self.move_speed, 0, 0)
+
+	def motion_back(self):
+		self.motion.move(-1.0 * self.move_speed, 0, 0)
+
 	def motion_turn_left(self, turn_angle):
 		self.motion.post.moveTo(0, 0, turn_angle * almath.TO_RAD)
+
 	def motion_turn_right(self, turn_angle):
 		self.motion.post.moveTo(0, 0, -1.0 * turn_angle * almath.TO_RAD)
 
@@ -148,7 +166,7 @@ def main(robot_IP, robot_PORT=9559):
 		avoid.start()					# start()只能执行一次, 会开新线程运行; 
 										# run()可以多次执行, 但是会在本线程运行;
 		# start()开新线程, 非阻塞, 因此这里延时一段时间以执行避障;
-		time.sleep(100)
+		time.sleep(1000)
 #		avoid.setflag(False)		 	# 方法1: 通过设置标志位为False来停止
 		avoid.stop()					# 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.	
 
