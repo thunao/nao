@@ -45,24 +45,24 @@ class avoidance(threading.Thread):
         self.delay_seconds = 0.2    # 设置延时事件, 单位：秒
         self.move_speed = 0.1        # 移动速度, 单位: m/s
         self.turn_angle = 10        # 旋转角度，单位: 角度
-        self.wall_angle = 45
+        self.wall_angle = 45        # 转身是否后退的阈值
         self.test_angle = 75
         self.walk_delay = 0.3
         self.turn_delay = 1.0
         self.test_delay = 3.0
-        self.run_time = 600
-        self.state = 0
+        self.run_time = 600         # 运行时间，到时间没找到球自动停止
+        self.state = 0              # 状态机的变量
         self.num = 0
         self.test_num = 0
         self.take_picture_num = 0
         self.take_picture_target = 19
-        self.test_turn_right = 20
+        self.test_turn_right = 20   # 控制右转的阈值
         self.turn_head_delay = 1.0
         self.avoid_hand = 0
         self.image = None
         self.last_left = 100
         self.last_right = 100
-        self.delte_distance = 0.1
+        self.delte_distance = 0.1    # 距离差的阈值
         # naoqi.ALProxy
         try:
             self.motion = ALProxy("ALMotion", robot_ip, robot_port)
@@ -231,6 +231,7 @@ class avoidance(threading.Thread):
         print "now state is %d, left: %f, right: %f"% (self.state, left_value, right_value)
 
     def avoid_operation(self):
+        # a state-machine
         #     left        right                operation
         #   ----------------------------------------------
         #     False        False                无障碍物，直走
@@ -303,12 +304,14 @@ class avoidance(threading.Thread):
 
     def motion_turn_left(self, turn_angle):
         if not turn_angle < self.wall_angle:
+            # step back a bit
             self.motion_back()
             time.sleep(self.walk_delay*2)
         self.motion.moveTo(0, 0, turn_angle * almath.TO_RAD)
 
     def motion_turn_right(self, turn_angle):
         if not turn_angle < self.wall_angle:
+            # step back a bit
             self.motion_back()
             time.sleep(self.walk_delay*2)
         self.motion.moveTo(0, 0, -1.0 * turn_angle * almath.TO_RAD)
@@ -327,17 +330,9 @@ def main(robot_IP, robot_PORT=9559):
         time.sleep(avoid.run_time)
 #        avoid.setflag(False)             # 方法1: 通过设置标志位为False来停止
         avoid.stop()                    # 方法2: 通过调用stop()函数停止该线程类，其内部也是设置标志位.
-
-        # 想要再次开启避障，需要再新建一个类对象
-        # 由于线程类只能调用start开启新线程一次，因此要多次使用超声波避障，需要实例化多个类；
-        # avoid2 = avoidance(robot_IP, robot_PORT)
-        # avoid2.start()
-        # time.sleep(10)
-        # avoid2.stop()
     except KeyboardInterrupt:
         # 中断程序
         avoid.stop()
-        # avoid2.stop()
         print "Interrupted by user, shutting down"
         sys.exit(0)
 
