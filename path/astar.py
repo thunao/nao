@@ -8,7 +8,7 @@ ymin=100
 start = None
 end = None
 
-def calc_G(node1, node2):
+def calc_G(node1, node2): # G值求取
     x1 = abs(node1.x - node2.x)
     y1 = abs(node1.y - node2.y)
     x2 = 0
@@ -16,17 +16,17 @@ def calc_G(node1, node2):
     if node1.father is not None:
         x2 = abs(node1.father.x - node2.x)
         y2 = abs(node1.father.y - node2.y)
-    if (x1 == 1 and y1 == 0) or (x1 == 0 and y1 == 1):
+    if (x1 == 1 and y1 == 0) or (x1 == 0 and y1 == 1): # 改进策略，使得弯道尽可能少
         if x2 == 0 or y2 == 0:
             return 1
         else:
             return 1.1
     return 0
 
-def calc_H(cur, end):
+def calc_H(cur, end): # H值求取，使用曼哈顿距离
     return abs(end.x-cur.x) + abs(end.y-cur.y)
 
-class Node:
+class Node: # 点，即每一个网格
     def __init__(this, father, x, y):
         if x < xmin or x > xmax or y < ymin or y > ymax:
             raise Exception("")
@@ -48,15 +48,15 @@ class Node:
             this.F = this.G + this.H
         this.father = father
 
-class astar:
+class astar: # 寻路算法
     def __init__(this, m, s, e):
         global start,end
         this.m = m.Map
-        this.open_list={}
-        this.close_list={}
+        this.open_list={} # open表
+        this.close_list={} # close表
         this.preset_map()
-        start = Node(None, s[0], s[1])
-        end = Node(None, e[0], e[1])
+        start = Node(None, s[0], s[1]) # 起点
+        end = Node(None, e[0], e[1]) # 终点
 
     def min_F_node(this):
         _min = 99999999999999999
@@ -114,6 +114,7 @@ class astar:
         this.path1 = []
         this.path1.append(end)
         while node.father is not None:
+            print node.x, node.y
             this.path1.append(node)
             node = node.father
         if len(this.path1) > 1:
@@ -159,16 +160,8 @@ class astar:
                     block_node = Node(None, x, y)
                     this.close_list[(block_node.x, block_node.y)] = block_node
 
-    def get_result(this):
-        global start, end
-        if this.find_the_path(start, end):
-            return this.mark_path(end.father)
-        else:
-            return start
-
-
 if __name__=='__main__':
     testm = testmap("testmap2.txt")
     t = astar(testm[0], testm[1], testm[2])
-    print t.get_result()
-
+    if t.find_the_path(start, end):
+        print t.mark_path(end.father)
